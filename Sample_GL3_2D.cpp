@@ -73,6 +73,7 @@ struct Game {
     VAO* object;
     float height,width,radius,depth;
     float angle;
+    float angle_z;
     int status;
     float numx;
     float numy;
@@ -105,6 +106,7 @@ int do_rot, floor_rel;
 int camera_rot = 90;
 int rect_pos_x=2,rect_pos_z=2;
 int x_flag_right=0,x_flag_left,z_flag_out=0,z_flag_in=0;
+int stand_up=0,lay_down=1;
 GLuint programID;
 double last_update_time, current_time;
 float rectangle_rotation = 0;
@@ -491,6 +493,7 @@ void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR c
     InstanceGame.depth=depth;
     InstanceGame.radius=(sqrt(height*height+width*width+depth*depth))/2;
     InstanceGame.angle=angle;
+    InstanceGame.angle_z=angle;
     InstanceGame.status=status;
     InstanceGame.numx=numx;
     InstanceGame.numy=numy;
@@ -581,7 +584,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     glUseProgram(programID);
 
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 12, 12, 12);
+    glm::vec3 eye ( -4, 14, 14);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
     glm::vec3 target (0, 0, 0);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
@@ -669,37 +672,96 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
         glm::mat4 ObjectTransform;
         if(x_flag_left==1)
         {
-            cuboid[current].x -= rect_pos_x;
-            x_flag_left = 0;
+            cuboid[current].x -= rect_pos_x+0.5;
+            if(lay_down==1)
+            {
+                cuboid[current].angle += 90;
+                stand_up = 1;
+                lay_down = 0;
+            }
+
+            else if(stand_up==1)
+            {
+                cuboid[current].x += 0.5;
+                cuboid[current].x += 0.5;
+                cuboid[current].angle -= 90;
+                stand_up = 0;
+                lay_down = 1;
+            }
+
         }
 
         if(x_flag_right==1)
         {
-            cuboid[current].x += rect_pos_x;
-            x_flag_right = 0;
+            cuboid[current].x += rect_pos_x+1.5;
+            if(lay_down==1)
+            {
+                cuboid[current].angle += 90;
+                stand_up = 1;
+                lay_down = 0;
+            }
+
+            else if(stand_up==1)
+            {
+                cuboid[current].x -= 0.5;
+                cuboid[current].x -= 0.5;
+                cuboid[current].angle -= 90;
+                stand_up = 0;
+                lay_down = 1;
+            }
         }
 
         if(z_flag_out==1)
         {
-            cuboid[current].z += rect_pos_z;
-            z_flag_out = 0;
+            cuboid[current].z += rect_pos_z+1.5;
+            if(lay_down==1)
+            {
+                cuboid[current].z -= 1.5;
+            }
+            else if(stand_up==1)
+            {
+                cuboid[current].z -= 0.5;
+                cuboid[current].z -= 0.5;
+                cuboid[current].angle_z -=90;
+            }
         }
         if(z_flag_in==1)
         {
-            cuboid[current].z -= rect_pos_z;
-            z_flag_in = 0;
+            cuboid[current].z -= rect_pos_z+0.5;
+
+            if(lay_down==1)
+            {
+                cuboid[current].z += 0.5;
+            }
+
+            else if(stand_up==1)
+            {
+                cuboid[current].z += 0.5;
+                cuboid[current].z += 0.5;
+                cuboid[current].angle_z +=90;
+            
+            }
+
         }
 
-        glm::mat4 translateObject = glm::translate (glm::vec3(cuboid[current].x,cuboid[current].y, cuboid[current].z)); 
+        glm::mat4 translateObject = glm::translate (glm::vec3(cuboid[current].x,cuboid[current].y, cuboid[current].z));
+    
         glm::mat4 rotateTriangle = glm::rotate((float)((cuboid[current].angle)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
         ObjectTransform=translateObject*rotateTriangle;
         Matrices.model *= ObjectTransform;
+
+        
         //MVP = VP * Matrices.model; // MVP = p * V * M
         if(doM)
             MVP = VP * Matrices.model;
         else
             MVP = VP;
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+        x_flag_left = 0;
+        x_flag_right = 0;
+        z_flag_out = 0;
+        z_flag_in = 0;
 
         draw3DObject(cuboid[current].object);
         //glPopMatrix (); 
@@ -778,7 +840,7 @@ void initGL (GLFWwindow* window, int width, int height)
         }
     }
 
-    createRectangle("cuboid",0,brown2,brown2,brown2,brown2,0.75,0,0.25,2,4,2,"cuboid",0,0,0);
+    createRectangle("cuboid",0,brown2,brown2,brown2,brown2,0.5,0,0.1,2,4,2,"cuboid",0,0,0);
 
     reshapeWindow (window, width, height);
 
