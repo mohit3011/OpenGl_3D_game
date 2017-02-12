@@ -83,12 +83,12 @@ map <string, Game> background;
 map <string, Game> cuboid;
 
 int gamemap[10][10]={
-    {1,1,1,1,1,0,1,1,0,0},
-    {0,0,0,1,1,1,1,1,0,0},
-    {0,0,1,1,1,1,0,0,0,0},
+    {1,1,1,1,25,0,1,1,0,0},
+    {0,0,0,0,0,1,1,1,0,0},
     {0,0,0,1,1,0,0,0,0,0},
+    {0,0,0,1,13,0,0,0,0,0},
     {0,0,0,1,1,0,0,0,0,0},
-    {0,0,0,1,1,0,0,0,0,0},
+    {0,0,0,1,1,0,0,0,0,0},      // 0 means gap , 1 means normal tile , 2 means bridge , 3 mean lever
     {0,0,0,1,1,1,1,0,0,0},
     {0,0,0,0,0,1,1,0,0,0},
     {0,0,0,1,1,1,1,1,0,0},
@@ -104,6 +104,7 @@ struct GLMatrices {
 
 int do_rot, floor_rel;
 int camera_rot = 90;
+int k=0;
 int rect_pos_x=2,rect_pos_z=2;
 int x_flag_right=0,x_flag_left,z_flag_out=0,z_flag_in=0;
 int stand_up=0,lay_down=1;
@@ -639,6 +640,33 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
 
     // draw3DObject draws the VAO given to it using current MVP matrix
     //draw3DObject(floor_vao);
+    for(int i=0;i<10;i++)
+    {
+        for(int j=0;j<10;j++)
+        {
+            if(gamemap[i][j]>2)
+            {
+
+                if(cuboid["cuboid"].x>2*(i-3)-1 && cuboid["cuboid"].x<2*(i-3)+1 && cuboid["cuboid"].z>2*(j-3)-1 && cuboid["cuboid"].z<2*(j-3)+1)
+                {
+                string c="tile";
+                char d=k+'0';
+                string e=c+d;
+                int ones = gamemap[i][j]%10;
+                int temp = gamemap[i][j]/10;
+                int tens = gamemap[i][j]%10;
+                if(gamemap[ones][tens]==0)
+                {
+                    cout << "hello" << endl;
+                    gamemap[ones][tens] = 2;
+                    createtile(e,0,gold,gold,gold,gold,2*(ones-3),-1,2*(tens-3),1,2,2,"tile",0,i,j);
+                    k++;
+                }
+        
+                }
+            }
+        }
+    }
 
     for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
         string current = it->first; //The name of the current object
@@ -720,9 +748,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
             }
             else if(stand_up==1)
             {
-                cuboid[current].z -= 0.5;
-                cuboid[current].z -= 0.5;
-                cuboid[current].angle_z -=90;
+                cuboid[current].z -= 1.5;
             }
         }
         if(z_flag_in==1)
@@ -737,8 +763,6 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
             else if(stand_up==1)
             {
                 cuboid[current].z += 0.5;
-                cuboid[current].z += 0.5;
-                cuboid[current].angle_z +=90;
             
             }
 
@@ -818,7 +842,7 @@ void initGL (GLFWwindow* window, int width, int height)
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
 
-    int k=0,i,j;
+    int i,j;
     for(i=0;i<10;i++)
     {
 
@@ -831,10 +855,35 @@ void initGL (GLFWwindow* window, int width, int height)
                 string c="tile";
                 char d=k+'0';
                 string e=c+d;
-                if((i+j)%2==0) 
+                if((i+j)%2==0)
+                { 
                     createtile(e,0,brown1,brown1,brown1,brown1,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                }
                 else
+                {
                     createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                }
+                k++;
+            }
+
+            /*else if(gamemap[i][j]==2)
+            {
+                string c="tile";
+                char d=k+'0';
+                string e=c+d;
+
+                createtile(e,0,gold,gold,gold,gold,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                k++;
+            }*/
+
+            else if(gamemap[i][j]>2)
+            {
+                string c="tile";
+                char d=k+'0';
+                string e=c+d;
+
+                createtile(e,0,blue,blue,blue,blue,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+
                 k++;
             }        
         }
