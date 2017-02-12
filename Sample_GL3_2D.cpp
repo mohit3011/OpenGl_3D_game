@@ -101,10 +101,12 @@ struct GLMatrices {
     GLuint MatrixID;
 } Matrices;
 
-int do_rot, floor_rel;;
+int do_rot, floor_rel;
+int camera_rot = 90;
+int rect_pos_x=2,rect_pos_z=2;
+int x_flag_right=0,x_flag_left,z_flag_out=0,z_flag_in=0;
 GLuint programID;
 double last_update_time, current_time;
-glm::vec3 rect_pos, floor_pos;
 float rectangle_rotation = 0;
 
 /* Function to load Shaders - Use it as it is */
@@ -305,67 +307,38 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
     case GLFW_KEY_ESCAPE:
         quit(window);
         break;
+
+    case GLFW_KEY_A:
+        x_flag_left = 1;        
+        break;
+
+    case GLFW_KEY_D:
+        x_flag_right = 1;
+        break;
+
+    case GLFW_KEY_W:
+        z_flag_in = 1;
+        break;
+
+    case GLFW_KEY_S:
+        z_flag_out = 1;
+        break;
+
     default:
         break;
         }
     }
 }
 
-/* Executed for character input (like in text boxes) */
 void keyboardChar (GLFWwindow* window, unsigned int key)
 {
     switch (key) {
-    case 'Q':
-    case 'q':
-    quit(window);
-    break;
-    case 'a':
-    rect_pos.x -= 0.1;
-    break;
-    case 'd':
-    rect_pos.x += 0.1;
-    break;
-    case 'w':
-    rect_pos.y += 0.1;
-    break;
-    case 's':
-    rect_pos.y -= 0.1;
-    break;
-    case 'r':
-    rect_pos.z -= 0.1;
-    break;
-    case 'f':
-    rect_pos.z += 0.1;
-    break;
-    case 'e':
-    rectangle_rotation += 1;
-    break;
-    case 'j':
-    floor_pos.x -= 0.1;
-    break;
-    case 'l':
-    floor_pos.x += 0.1;
-    break;
-    case 'i':
-    floor_pos.y += 0.1;
-    break;
-    case 'k':
-    floor_pos.y -= 0.1;
-    break;
-    case 'y':
-    floor_pos.z -= 0.1;
-    break;
-    case 'h':
-    floor_pos.z += 0.1;
-    break;
-    case 'g':
-    floor_rel ^= 1;
-    break;
-    case ' ':
-    do_rot ^= 1;
-    break;
-    default:
-    break;
+        case 'Q':
+        case 'q':
+            quit(window);
+            break;
+        default:
+            break;
     }
 }
 
@@ -412,47 +385,47 @@ void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR c
     // GL3 accepts only Triangles. Quads are not supported
     float w=width,h=height,d=depth;
     static const GLfloat vertex_buffer_data [] = {
-    -w/2, h/2, d/2, 
-    -w/2, -h/2, d/2, 
-    w/2, -h/2, d/2,
-    -w/2, h/2, d/2, 
-    w/2, -h/2, d/2,
-    w/2, h/2, d/2,
+    -w/2+x, h/2+y, d/2+z, 
+    -w/2+x, -h/2+y, d/2+z, 
+    w/2+x, -h/2+y, d/2+z,
+    -w/2+x, h/2+y, d/2+z, 
+    w/2+x, -h/2+y, d/2+z,
+    w/2+x, h/2+y, d/2+z,
 
-    w/2, h/2, d/2,
-    w/2, -h/2, d/2,
-    w/2, -h/2, -d/2,
-    w/2, h/2, d/2,
-    w/2, -h/2, -d/2,
-    w/2, h/2, -d/2,
+    w/2+x, h/2+y, d/2+z,
+    w/2+x, -h/2+y, d/2+z,
+    w/2+x, -h/2+y, -d/2+z,
+    w/2+x, h/2+y, d/2+z,
+    w/2+x, -h/2+y, -d/2+z,
+    w/2+x, h/2+y, -d/2+z,
 
-    w/2, h/2, -d/2,
-    w/2, -h/2, -d/2,
-    -w/2, -h/2, -d/2,
-    w/2, h/2, -d/2,
-    -w/2, -h/2, -d/2,
-    -w/2, h/2, -d/2,
+    w/2+x, h/2+y, -d/2+z,
+    w/2+x, -h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, -d/2+z,
+    w/2+x, h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, -d/2+z,
+    -w/2+x, h/2+y, -d/2+z,
 
-    -w/2, h/2, -d/2,
-    -w/2, -h/2, -d/2,
-    -w/2, -h/2, d/2, 
-    -w/2, h/2, -d/2,
-    -w/2, -h/2, d/2, 
-    -w/2, h/2, d/2, 
+    -w/2+x, h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, d/2+z, 
+    -w/2+x, h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, d/2+z, 
+    -w/2+x, h/2+y, d/2+z, 
     
-    -w/2, h/2, -d/2,
-    -w/2, h/2, d/2, 
-    w/2, h/2, d/2,
-    -w/2, h/2, -d/2,
-    w/2, h/2, d/2,
-    w/2, h/2, -d/2,
+    -w/2+x, h/2+y, -d/2+z,
+    -w/2+x, h/2+y, d/2+z, 
+    w/2+x, h/2+y, d/2+z,
+    -w/2+x, h/2+y, -d/2+z,
+    w/2+x, h/2+y, d/2+z,
+    w/2+x, h/2+y, -d/2+z,
     
-    -w/2, -h/2, d/2, 
-    -w/2, -h/2, -d/2,
-    w/2, -h/2, -d/2,
-    -w/2, -h/2, d/2, 
-    w/2, -h/2, -d/2,
-    w/2, -h/2, d/2,
+    -w/2+x, -h/2+y, d/2+z, 
+    -w/2+x, -h/2+y, -d/2+z,
+    w/2+x, -h/2+y, -d/2+z,
+    -w/2+x, -h/2+y, d/2+z, 
+    w/2+x, -h/2+y, -d/2+z,
+    w/2+x, -h/2+y, d/2+z,
     
     };
 
@@ -592,7 +565,7 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         background[name]=InstanceGame;
 }
 
-float camera_rotation_angle = 90;
+float camera_rotation_angle = camera_rot;
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
@@ -608,7 +581,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     glUseProgram(programID);
 
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( 5*sin(camera_rotation_angle*M_PI/180.0f), 3, 5*sin(camera_rotation_angle*M_PI/180.0f) );
+    glm::vec3 eye ( 12, 12, 12);
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
     glm::vec3 target (0, 0, 0);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
@@ -631,7 +604,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     // For each model you render, since the MVP will be different (at least the M part)
     glm::mat4 MVP;  // MVP = Projection * View * Model
 
-    // Load identity to model matrix
+    /*// Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
 
     glm::mat4 translateRectangle = glm::translate (rect_pos);        // glTranslatef
@@ -647,8 +620,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(rectangle);
-
+    draw3DObject(rectangle);*/
 
     // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
@@ -661,9 +633,6 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
 
     // draw3DObject draws the VAO given to it using current MVP matrix
     draw3DObject(cam);
-    Matrices.model = glm::translate(floor_pos);
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
     //draw3DObject(floor_vao);
@@ -698,6 +667,29 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
         Matrices.model = glm::mat4(1.0f);
 
         glm::mat4 ObjectTransform;
+        if(x_flag_left==1)
+        {
+            cuboid[current].x -= rect_pos_x;
+            x_flag_left = 0;
+        }
+
+        if(x_flag_right==1)
+        {
+            cuboid[current].x += rect_pos_x;
+            x_flag_right = 0;
+        }
+
+        if(z_flag_out==1)
+        {
+            cuboid[current].z += rect_pos_z;
+            z_flag_out = 0;
+        }
+        if(z_flag_in==1)
+        {
+            cuboid[current].z -= rect_pos_z;
+            z_flag_in = 0;
+        }
+
         glm::mat4 translateObject = glm::translate (glm::vec3(cuboid[current].x,cuboid[current].y, cuboid[current].z)); 
         glm::mat4 rotateTriangle = glm::rotate((float)((cuboid[current].angle)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
         ObjectTransform=translateObject*rotateTriangle;
@@ -778,15 +770,15 @@ void initGL (GLFWwindow* window, int width, int height)
                 char d=k+'0';
                 string e=c+d;
                 if((i+j)%2==0) 
-                    createtile(e,0,brown1,brown1,brown1,brown1,1.5*(i-3),0,1.5*(j-3),1,1.5,1.5,"tile",0,i,j);
+                    createtile(e,0,brown1,brown1,brown1,brown1,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
                 else
-                    createtile(e,0,brown2,brown2,brown2,brown2,1.5*(i-3),0,1.5*(j-3),1,1.5,1.5,"tile",0,i,j);
+                    createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
                 k++;
             }        
         }
     }
 
-    createRectangle("cuboid",0,brown2,brown2,brown2,brown2,16,0.5,4,1.5,3,1.5,"cuboid",0,0,0);
+    createRectangle("cuboid",0,brown2,brown2,brown2,brown2,0.75,0,0.25,2,4,2,"cuboid",0,0,0);
 
     reshapeWindow (window, width, height);
 
@@ -805,10 +797,8 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-    int width = 600;
-    int height = 600;
-    rect_pos = glm::vec3(0, 0, 0);
-    floor_pos = glm::vec3(0, 0, 0);
+    int width = 800;
+    int height = 800;
     do_rot = 0;
     floor_rel = 1;
 
