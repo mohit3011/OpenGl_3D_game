@@ -34,39 +34,38 @@ struct COLOR {
 };
 typedef struct COLOR COLOR;
 
-COLOR grey = {168.0/255.0,168.0/255.0,168.0/255.0};
-COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
-COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
-COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
-COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
-COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
-COLOR black = {30/255.0,30/255.0,21/255.0};
-COLOR blue = {0,0,1};
-COLOR ball = {255/255.0,228/225.0,181/255.0};
-COLOR darkbrown = {46/255.0,46/255.0,31/255.0};
-COLOR lightbrown = {95/255.0,63/255.0,32/255.0};
-COLOR brown1 = {117/255.0,78/255.0,40/255.0};
-COLOR brown2 = {134/255.0,89/255.0,40/255.0};
-COLOR brown3 = {46/255.0,46/255.0,31/255.0};
-COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
-COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
-COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
-COLOR skyblue7 = {95/255.0,158/255.0,160/255.0};
-COLOR skyblue6 = {175/255.0,238/255.0,238/255.0};
-COLOR skyblue5 = {70/255.0,130/255.0,180/255.0};
-COLOR skyblue4 = {30/255.0,144/255.0,255/255};
-COLOR skyblue3 = {135/255.0,206/255.0,250/255};
-COLOR skyblue2 = {0/255.0,0/255.0,125/255.0};
-COLOR skyblue1 = {123/255.0,201/255.0,227/255.0};
-COLOR skyblue = {132/255.0,217/255.0,245/255.0};
-COLOR cloudwhite = {229/255.0,255/255.0,255/255.0};
-COLOR cloudwhite1 = {204/255.0,255/255.0,255/255.0};
-COLOR lightpink = {255/255.0,122/255.0,173/255.0};
-COLOR darkpink = {255/255.0,51/255.0,119/255.0};
-COLOR white = {255/255.0,255/255.0,255/255.0};
-COLOR score = {117/255.0,78/255.0,40/255.0};
-COLOR lightred = {117/255.0,78/255.0,71/255.0};
-COLOR otherred = {178/255.0,34/255.0,34/255.0};
+    COLOR grey = {165.0/255.0,165.0/255.0,165.0/255.0};
+    COLOR dimgrey = {105.0/255.0,105.0/255.0,105.0/255.0};
+    COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
+    COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
+    COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
+    COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
+    COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
+    COLOR black = {30/255.0,30/255.0,21/255.0};
+    COLOR blue = {0,0,1};
+    COLOR darkbrown = {46/255.0,46/255.0,31/255.0};
+    COLOR lightbrown = {95/255.0,63/255.0,32/255.0};
+    COLOR brown1 = {117/255.0,78/255.0,40/255.0};
+    COLOR brown2 = {134/255.0,89/255.0,40/255.0};
+    COLOR brown3 = {46/255.0,46/255.0,31/255.0};
+    COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
+    COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
+    COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
+    COLOR slateblue = {106/255.0, 90/255.0, 205/255.0};
+    COLOR aliceblue = {240/255.0,248/255.0,255/255.0};
+    COLOR skyblue1 = {123/255.0,201/255.0,227/255.0};
+    COLOR skyblue = {132/255.0,217/255.0,245/255.0};
+    COLOR cloudwhite = {229/255.0,255/255.0,255/255.0};
+    COLOR cloudwhite1 = {204/255.0,255/255.0,255/255.0};
+    COLOR lightpink = {255/255.0,122/255.0,173/255.0};
+    COLOR darkpink = {255/255.0,51/255.0,119/255.0};
+    COLOR white = {255/255.0,255/255.0,255/255.0};
+    COLOR azure = {255/255.0,245/255.0,238/255.0};
+    COLOR score = {117/255.0,78/255.0,40/255.0};
+    COLOR chocolate = {210/255.0, 105/255.0, 30/255.0};
+    COLOR indianred = {205/255.0, 92/255.0, 92/255.0};
+    COLOR peach = {255/255.0, 218/255.0, 185/255.0};
+    COLOR wheat = {244/255.0, 164/255.0, 96/255.0};
 
 struct Game {
     string name;
@@ -801,33 +800,38 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 {
 
 
-COLOR grey = {168.0/255.0,168.0/255.0,168.0/255.0};
-COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
-COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
-COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
-COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
-COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
-COLOR black = {30/255.0,30/255.0,21/255.0};
-COLOR blue = {0,0,1};
-COLOR darkbrown = {46/255.0,46/255.0,31/255.0};
-COLOR lightbrown = {95/255.0,63/255.0,32/255.0};
-COLOR brown1 = {117/255.0,78/255.0,40/255.0};
-COLOR brown2 = {134/255.0,89/255.0,40/255.0};
-COLOR brown3 = {46/255.0,46/255.0,31/255.0};
-COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
-COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
-COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
-COLOR skyblue2 = {113/255.0,185/255.0,209/255.0};
-COLOR skyblue1 = {123/255.0,201/255.0,227/255.0};
-COLOR skyblue = {132/255.0,217/255.0,245/255.0};
-COLOR slateblue = {106/255.0, 90/255.0, 205/255.0};
-COLOR cloudwhite = {229/255.0,255/255.0,255/255.0};
-COLOR cloudwhite1 = {204/255.0,255/255.0,255/255.0};
-COLOR lightpink = {255/255.0,122/255.0,173/255.0};
-COLOR darkpink = {255/255.0,51/255.0,119/255.0};
-COLOR white = {255/255.0,255/255.0,255/255.0};
-COLOR score = {117/255.0,78/255.0,40/255.0};
-  
+    COLOR grey = {165.0/255.0,165.0/255.0,165.0/255.0};
+    COLOR dimgrey = {105.0/255.0,105.0/255.0,105.0/255.0};
+    COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
+    COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
+    COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
+    COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
+    COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
+    COLOR black = {30/255.0,30/255.0,21/255.0};
+    COLOR blue = {0,0,1};
+    COLOR darkbrown = {46/255.0,46/255.0,31/255.0};
+    COLOR lightbrown = {95/255.0,63/255.0,32/255.0};
+    COLOR brown1 = {117/255.0,78/255.0,40/255.0};
+    COLOR brown2 = {134/255.0,89/255.0,40/255.0};
+    COLOR brown3 = {46/255.0,46/255.0,31/255.0};
+    COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
+    COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
+    COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
+    COLOR slateblue = {106/255.0, 90/255.0, 205/255.0};
+    COLOR aliceblue = {240/255.0,248/255.0,255/255.0};
+    COLOR skyblue1 = {123/255.0,201/255.0,227/255.0};
+    COLOR skyblue = {132/255.0,217/255.0,245/255.0};
+    COLOR cloudwhite = {229/255.0,255/255.0,255/255.0};
+    COLOR cloudwhite1 = {204/255.0,255/255.0,255/255.0};
+    COLOR lightpink = {255/255.0,122/255.0,173/255.0};
+    COLOR darkpink = {255/255.0,51/255.0,119/255.0};
+    COLOR white = {255/255.0,255/255.0,255/255.0};
+    COLOR azure = {255/255.0,245/255.0,238/255.0};
+    COLOR score = {117/255.0,78/255.0,40/255.0};
+    COLOR chocolate = {210/255.0, 105/255.0, 30/255.0};
+    COLOR indianred = {205/255.0, 92/255.0, 92/255.0};
+    COLOR peach = {255/255.0, 218/255.0, 185/255.0};
+    COLOR wheat = {244/255.0, 164/255.0, 96/255.0};
 
     int fbwidth, fbheight;
     glfwGetFramebufferSize(window, &fbwidth, &fbheight);
@@ -1012,7 +1016,7 @@ COLOR score = {117/255.0,78/255.0,40/255.0};
         ps_score = ps_score/10;
         int hundreth = ps_score%10;
         int k_s;
-        /*for(k_s=0;k_s<=11;k_s++)
+        for(k_s=0;k_s<=11;k_s++)
         {
             if(k_s==0)
             {
@@ -1038,46 +1042,46 @@ COLOR score = {117/255.0,78/255.0,40/255.0};
                 setStrokes(inp);
             }
 
-            if(k==4)
+            if(k_s==4)
             {
                 char inp = 'C';
                 setStrokes(inp);
             }
 
-            if(k==5)
+            if(k_s==5)
             {
                 char inp = 'O';
                 setStrokes(inp);
             }
 
-            if(k==6)
+            if(k_s==6)
             {
                 char inp = 'R';
                 setStrokes(inp);
             }
-            if(k==7)
+            if(k_s==7)
             {
                 char inp = 'E';
                 setStrokes(inp);
             }
-            if(k==8)
+            if(k_s==8)
             {
                 char inp = 'L';
                 setStrokes(inp);
             }
 
-            if(k==9)
+            if(k_s==9)
             {
                 char inp = 'I';
                 setStrokes(inp);
             }
-            if(k==10)
+            if(k_s==10)
             {
                 char inp = 'F';
                 setStrokes(inp);
             }
 
-            if(k==11)
+            if(k_s==11)
             {
                 char inp = 'E';
                 setStrokes(inp);
@@ -1100,68 +1104,68 @@ COLOR score = {117/255.0,78/255.0,40/255.0};
 
                 glm::mat4 ObjectTransform;
                 
-                if(k==0)
+                if(k_s==0)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 
                 }
-                if(k==1)
+                if(k_s==1)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-36-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
 
-                if(k==2)
+                if(k_s==2)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-72-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==3)
+                if(k_s==3)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-130, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==4)
+                if(k_s==4)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-90, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==5)
+                if(k_s==5)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-50, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==6)
+                if(k_s==6)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-10, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+                    glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle_x), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
                     ObjectTransform=translateObject*rotateObjectAct;
                     
                 }
-                if(k==7)
+                if(k_s==7)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+30, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==8)
+                if(k_s==8)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-100, scoredisp[current].y+200, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
 
-                if(k==9)
+                if(k_s==9)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-60, scoredisp[current].y+200, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
 
-                if(k==10)
+                if(k_s==10)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-20, scoredisp[current].y+200, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
                 }
-                if(k==11)
+                if(k_s==11)
                 {
                     glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+20, scoredisp[current].y+200, 0.0f)); // glTranslatef
                     ObjectTransform=translateObject;
@@ -1176,7 +1180,7 @@ COLOR score = {117/255.0,78/255.0,40/255.0};
                 draw3DObject(scoredisp[current].object);
                 //glPopMatrix (); 
             }
-        }*/
+        }
 
     if(up1==1)
     {
@@ -1637,7 +1641,7 @@ void initGL (GLFWwindow* window, int width, int height)
 {
     /* Objects should be created before any other gl function and shaders */
     // Create the models
-    //createRectangle ();
+    //createtile ();
     //createCam();
     //createFloor();
 	
@@ -1648,7 +1652,7 @@ void initGL (GLFWwindow* window, int width, int height)
 
 	int k=0,i,j;
     //createtile("background",0,skyblue2,skyblue1,skyblue1,skyblue4,0,0,0,1000,1000,1000,"background",0,0,0);
-    //createRectangle("background1",0,skyblue2,skyblue1,skyblue,skyblue4,300,0,0,height,0,width,"background",0,0,0);
+    //createtile("background1",0,skyblue2,skyblue1,skyblue,skyblue4,300,0,0,height,0,width,"background",0,0,0);
     for(i=0;i<10;i++)
     {
 
@@ -1689,18 +1693,18 @@ void initGL (GLFWwindow* window, int width, int height)
     createtile("cube2",0,red,red,red,red,12,2.25,-4,2,2,2,"cube",0,0,0);
 
 
-    /*createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0+550,24,8,24,"score");
-    createRectangle("bottom",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24,8,24,"score");
-    createRectangle("middle",10000,chocolate,chocolate,chocolate,chocolate,0+550,0,8,24,"score");
-    createRectangle("left1",10000,chocolate,chocolate,chocolate,chocolate,-24/2+550,24/2,24,8,"score");
-    createRectangle("left2",10000,chocolate,chocolate,chocolate,chocolate,-24/2+550,-24/2,24,8,"score");
-    createRectangle("right1",10000,chocolate,chocolate,chocolate,chocolate,24/2+550,24/2,24,8,"score");
-    createRectangle("right2",10000,chocolate,chocolate,chocolate,chocolate,24/2+550,-24/2,24,8,"score");
-    createRectangle("middle1",10000,chocolate,chocolate,chocolate,chocolate,0+550,24/2,24,8,"score");
-    createRectangle("middle2",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,24,8,"score");
-    createRectangle("diagonal",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,24*sqrt(2),8,"score");
+    createtile("top",0,chocolate,chocolate,chocolate,chocolate,0+550,24,0,8,24,0,"score",0,0,0);
+    createtile("bottom",0,chocolate,chocolate,chocolate,chocolate,0+550,-24,0,8,24,0,"score",0,0,0);
+    createtile("middle",0,chocolate,chocolate,chocolate,chocolate,0+550,0,0,8,24,0,"score",0,0,0);
+    createtile("left1",0,chocolate,chocolate,chocolate,chocolate,-24/2+550,24/2,0,24,8,0,"score",0,0,0);
+    createtile("left2",0,chocolate,chocolate,chocolate,chocolate,-24/2+550,-24/2,0,24,8,0,"score",0,0,0);
+    createtile("right1",0,chocolate,chocolate,chocolate,chocolate,24/2+550,24/2,0,24,8,0,"score",0,0,0);
+    createtile("right2",0,chocolate,chocolate,chocolate,chocolate,24/2+550,-24/2,0,24,8,0,"score",0,0,0);
+    createtile("middle1",0,chocolate,chocolate,chocolate,chocolate,0+550,24/2,0,24,8,0,"score",0,0,0);
+    createtile("middle2",0,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,0,24,8,0,"score",0,0,0);
+    createtile("diagonal",0,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,0,24*sqrt(2),8,0,"score",0,0,0);
     
-    createCircle("1",10000,indianred,450+8,132,20,20,1000,"life",1);
+    /*createCircle("1",10000,indianred,450+8,132,20,20,1000,"life",1);
     createCircle("2",10000,indianred,500+8,132,20,20,1000,"life",1);
     createCircle("3",10000,indianred,550+8,132,20,20,1000,"life",1);*/
 
