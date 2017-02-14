@@ -1,8 +1,10 @@
-#include <iostream>
 #include <bits/stdc++.h>
+#include <iostream>
 #include <cmath>
 #include <fstream>
 #include <vector>
+#include <string>
+#include <map>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -72,7 +74,8 @@ struct Game {
     float x,y,z;
     VAO* object;
     float height,width,radius,depth;
-    float angle;
+    float angle_x;
+    float angle_y;
     float angle_z;
     int status;
     float numx;
@@ -80,7 +83,7 @@ struct Game {
 };
 map <string, Game> tiles;
 map <string, Game> background;
-map <string, Game> cuboid;
+map <string, Game> cube;
 
 int gamemap[10][10]={
     {1,1,1,1,25,0,1,1,0,0},
@@ -94,7 +97,6 @@ int gamemap[10][10]={
     {0,0,0,1,1,1,1,1,0,0},
     {0,0,1,1,1,1,0,0,0,0}
 };
-
 struct GLMatrices {
     glm::mat4 projection;
     glm::mat4 model;
@@ -102,12 +104,7 @@ struct GLMatrices {
     GLuint MatrixID;
 } Matrices;
 
-int do_rot, floor_rel;
-int camera_rot = 90;
-int k=0;
-int rect_pos_x=2,rect_pos_z=2;
-int x_flag_right=0,x_flag_left,z_flag_out=0,z_flag_in=0;
-int stand_up=0,lay_down=1;
+int do_rot, floor_rel;;
 GLuint programID;
 double last_update_time, current_time;
 float rectangle_rotation = 0;
@@ -123,21 +120,21 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
     std::string VertexShaderCode;
     std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
     if(VertexShaderStream.is_open())
-    {
-        std::string Line = "";
-        while(getline(VertexShaderStream, Line))
-        VertexShaderCode += "\n" + Line;
-        VertexShaderStream.close();
-    }
+	{
+	    std::string Line = "";
+	    while(getline(VertexShaderStream, Line))
+		VertexShaderCode += "\n" + Line;
+	    VertexShaderStream.close();
+	}
 
     // Read the Fragment Shader code from the file
     std::string FragmentShaderCode;
     std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
     if(FragmentShaderStream.is_open()){
-    std::string Line = "";
-    while(getline(FragmentShaderStream, Line))
-        FragmentShaderCode += "\n" + Line;
-    FragmentShaderStream.close();
+	std::string Line = "";
+	while(getline(FragmentShaderStream, Line))
+	    FragmentShaderCode += "\n" + Line;
+	FragmentShaderStream.close();
     }
 
     GLint Result = GL_FALSE;
@@ -284,81 +281,32 @@ void draw3DObject (struct VAO* vao)
 
 float rectangle_rot_dir = 1;
 bool rectangle_rot_status = true;
+int up1=0,down1=0,right1=0,left1=0;
 
+
+float eye_x,eye_y,eye_z;
+float target_x,target_y,target_z;
+int camera_follow=0;
+int camera_follow_adjust=0;
+int camera_top=0;
+int camera_fps=0;
+float camera_radius;
+float camera_fov=1.3;
+float fps_head_offset=0;
+float fps_head_offset_x=0;
+int camera_tower=1;
+int camera_helicopter=0;
+int camera_self=0;
+int orient_right=0;
+int orient_left=0;
+int orient_forward=0;
+int orient_backward=0;
+int mouse_click=0,right_mouse_click=0;
+int keyboard_press=0;
+double mouse_pos_x, mouse_pos_y;
+double prev_mouse_pos_x,prev_mouse_pos_y;
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
-void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    // Function is called first on GLFW_PRESS.
-
-    if (action == GLFW_RELEASE) {
-        switch (key) {
-    case GLFW_KEY_C:
-        rectangle_rot_status = !rectangle_rot_status;
-        break;
-    case GLFW_KEY_P:
-        break;
-    case GLFW_KEY_X:
-        // do something ..
-        break;
-    default:
-        break;
-        }
-    }
-    else if (action == GLFW_PRESS) {
-        switch (key) {
-    case GLFW_KEY_ESCAPE:
-        quit(window);
-        break;
-
-    case GLFW_KEY_A:
-        x_flag_left = 1;        
-        break;
-
-    case GLFW_KEY_D:
-        x_flag_right = 1;
-        break;
-
-    case GLFW_KEY_W:
-        z_flag_in = 1;
-        break;
-
-    case GLFW_KEY_S:
-        z_flag_out = 1;
-        break;
-
-    default:
-        break;
-        }
-    }
-}
-
-void keyboardChar (GLFWwindow* window, unsigned int key)
-{
-    switch (key) {
-        case 'Q':
-        case 'q':
-            quit(window);
-            break;
-        default:
-            break;
-    }
-}
-
-/* Executed when a mouse button is pressed/released */
-void mouseButton (GLFWwindow* window, int button, int action, int mods)
-{
-    switch (button) {
-    case GLFW_MOUSE_BUTTON_RIGHT:
-    if (action == GLFW_RELEASE) {
-        rectangle_rot_dir *= -1;
-    }
-    break;
-    default:
-    break;
-    }
-}
-
 
 /* Executed when window is resized to 'width' and 'height' */
 /* Modify the bounds of the screen here in glm::ortho or Field of View in glm::Perspective */
@@ -379,105 +327,287 @@ void reshapeWindow (GLFWwindow* window, int width, int height)
     // Ortho projection for 2D views
     //Matrices.projection = glm::ortho(-4.0f, 4.0f, -4.0f, 4.0f, 0.1f, 500.0f);
 }
+void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    // Function is called first on GLFW_PRESS.
+
+    if (action == GLFW_RELEASE) {
+        switch (key) {
+    case GLFW_KEY_UP:
+        if(left1==0 && right1==0 && up1==0 && down1==0)
+        {
+            up1=1;
+            down1=0;
+            right1=0;
+            left1=0;
+        }
+        break;
+    case GLFW_KEY_DOWN:
+        if(left1==0 && right1==0  && up1==0  && down1==0)
+        {
+            down1=1;
+            up1=0;
+            right1=0;
+            left1=0;
+        }
+        break;
+    case GLFW_KEY_LEFT:
+        if(left1==0 && right1==0 && up1==0 && down1==0)
+        {
+            right1=0;
+            left1=1;
+            up1=0;
+            down1=0;
+        }
+        break;
+    case GLFW_KEY_RIGHT:
+        if(left1==0 && right1==0 && up1==0 && down1==0)
+        {
+            right1=1;
+            left1=0;
+            up1=0;
+            down1=0;
+        }
+        break;
+    case GLFW_KEY_T:
+        camera_top=1;
+        camera_follow=0;
+        camera_fps=0;
+        camera_tower=0;
+        camera_self=0;
+        camera_helicopter=0;
+        break;
+    case GLFW_KEY_R:
+        camera_top=0;
+        camera_follow=0;
+        camera_fps=0;
+        camera_tower=1;
+        camera_self=0;
+        camera_helicopter=0;
+        break;
+    case GLFW_KEY_F:
+        camera_top=0;
+        camera_follow=1;
+        camera_fps=0;
+        camera_tower=0;
+        camera_self=0;
+        camera_helicopter=0;
+        break;
+    case GLFW_KEY_P:
+        camera_top=0;
+        camera_follow=0;
+        camera_fps=0;
+        camera_tower=0;
+        camera_self=0;
+        camera_helicopter=1;
+        break;
+ case GLFW_KEY_I:
+    camera_top=0;
+    camera_follow=0;
+    camera_fps=0;
+    camera_tower=0;
+    camera_self=1;
+    camera_helicopter=0;
+    break;
+	default:
+	    break;
+        }
+    }
+    else if (action == GLFW_PRESS) {
+        switch (key) {
+	case GLFW_KEY_ESCAPE:
+	    quit(window);
+	    break;
+	default:
+	    break;
+        }
+    }
+}
+
+/* Executed for character input (like in text boxes) */
+void keyboardChar (GLFWwindow* window, unsigned int key)
+{
+    switch (key) {
+    case 'Q':
+    case 'q':
+	quit(window);
+	break;
+    case 'a':
+	   if(camera_follow==1 || camera_self==1)
+       {
+            orient_left=1;
+            orient_right=0;
+            orient_backward=0;
+            orient_forward=0;
+       }
+	break;
+    case 'd':
+    	if(camera_follow==1 ||  camera_self==1)
+           {
+                orient_left=0;
+                orient_right=1;
+                orient_backward=0;
+                orient_forward=0;
+           }
+	break;
+    case 'w':
+	   if(camera_follow==1 ||camera_self==1)
+       {
+            orient_left=0;
+            orient_right=0;
+            orient_backward=0;
+            orient_forward=1;
+       }
+	break;
+    case 's':
+        if(camera_follow==1 || camera_self==1)
+       {
+            orient_left=0;
+            orient_right=0;
+            orient_backward=1;
+            orient_forward=0;
+       }
+	break;
+    case ' ':
+	do_rot ^= 1;
+	break;
+    default:
+	break;
+    }
+}
+
+/* Executed when a mouse button is pressed/released */
+void mouseButton (GLFWwindow* window, int button, int action, int mods)
+{
+    switch (button) {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        if(action == GLFW_PRESS)
+        {
+            mouse_click=1;
+            keyboard_press=0;
+            right_mouse_click=0;
+        }
+        if(action == GLFW_RELEASE)
+        {
+            mouse_click=0;
+        }
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        if(action == GLFW_PRESS)
+        {
+            right_mouse_click=1;
+            keyboard_press=0;
+            mouse_click=0;
+        }
+	    if(action == GLFW_RELEASE) 
+        {
+	       right_mouse_click=0;
+	    }
+	   break;
+    default:
+	break;
+    }
+}
 
 VAO *rectangle, *cam, *floor_vao;
 
-
-void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR color3,COLOR color4,float x, float y,float z, float height, float width, float depth, string component,int status,float numx,float numy)
+// Creates the rectangle object used in this sample code
+void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR color3,COLOR color4,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
 {
     // GL3 accepts only Triangles. Quads are not supported
-    float w=width,h=height,d=depth;
+    float w=width/2,h=height/2,d=depth/2;
     static const GLfloat vertex_buffer_data [] = {
-    -w/2+x, h/2+y, d/2+z, 
-    -w/2+x, -h/2+y, d/2+z, 
-    w/2+x, -h/2+y, d/2+z,
-    -w/2+x, h/2+y, d/2+z, 
-    w/2+x, -h/2+y, d/2+z,
-    w/2+x, h/2+y, d/2+z,
-
-    w/2+x, h/2+y, d/2+z,
-    w/2+x, -h/2+y, d/2+z,
-    w/2+x, -h/2+y, -d/2+z,
-    w/2+x, h/2+y, d/2+z,
-    w/2+x, -h/2+y, -d/2+z,
-    w/2+x, h/2+y, -d/2+z,
-
-    w/2+x, h/2+y, -d/2+z,
-    w/2+x, -h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, -d/2+z,
-    w/2+x, h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, -d/2+z,
-    -w/2+x, h/2+y, -d/2+z,
-
-    -w/2+x, h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, d/2+z, 
-    -w/2+x, h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, d/2+z, 
-    -w/2+x, h/2+y, d/2+z, 
-    
-    -w/2+x, h/2+y, -d/2+z,
-    -w/2+x, h/2+y, d/2+z, 
-    w/2+x, h/2+y, d/2+z,
-    -w/2+x, h/2+y, -d/2+z,
-    w/2+x, h/2+y, d/2+z,
-    w/2+x, h/2+y, -d/2+z,
-    
-    -w/2+x, -h/2+y, d/2+z, 
-    -w/2+x, -h/2+y, -d/2+z,
-    w/2+x, -h/2+y, -d/2+z,
-    -w/2+x, -h/2+y, d/2+z, 
-    w/2+x, -h/2+y, -d/2+z,
-    w/2+x, -h/2+y, d/2+z,
-    
+	-w, h, d, 
+	-w, -h, d, 
+	w, -h, d,
+	-w, h, d, 
+	w, -h, d,
+	w, h, d,
+	w, h, d,
+	w, -h, d,
+	w, -h, -d,
+	w, h, d,
+	w, -h, -d,
+	w, h, -d,
+	w, h, -d,
+	w, -h, -d,
+	-w, -h, -d,
+	w, h, -d,
+	-w, -h, -d,
+	-w, h, -d,
+	-w, h, -d,
+	-w, -h, -d,
+	-w, -h, d, 
+	-w, h, -d,
+	-w, -h, d, 
+	-w, h, d, 
+	-w, h, -d,
+	-w, h, d, 
+	w, h, d,
+	-w, h, -d,
+	w, h, d,
+	w, h, -d,
+	-w, -h, d, 
+	-w, -h, -d,
+	w, -h, -d,
+	-w, -h, d, 
+	w, -h, -d,
+	w, -h, d,
+	-w, h, d,
+	w, h, -d,
+	w, h, -d,
     };
 
     static const GLfloat color_buffer_data [] = {
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
 
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6
 
 
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
 
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6
 
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
 
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6
+        
 
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
 
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6
+        
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
+
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6
+        
+        color.r,color.g,color.b, // color 1
+        color.r,color.g,color.b, // color 2
+        color2.r,color2.g,color2.b, // color 3
+
+        color2.r,color2.g,color2.b, // color 4
+        color2.r,color2.g,color2.b, // color 5
+        color.r,color.g,color.b, // color 6=
     };
 
     // create3DObject creates and returns a handle to a VAO that can be used later
@@ -493,7 +623,8 @@ void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR c
     InstanceGame.width=width;
     InstanceGame.depth=depth;
     InstanceGame.radius=(sqrt(height*height+width*width+depth*depth))/2;
-    InstanceGame.angle=angle;
+    InstanceGame.angle_x=angle;
+    InstanceGame.angle_y=angle;
     InstanceGame.angle_z=angle;
     InstanceGame.status=status;
     InstanceGame.numx=numx;
@@ -502,52 +633,156 @@ void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR c
         tiles[name]=InstanceGame;
     else if(component=="background")
         background[name]=InstanceGame;
-    else if(component=="cuboid")
-        cuboid[name]=InstanceGame;
+    else if(component=="cube")
+        cube[name]=InstanceGame;
 }
 void createCam ()
 {
     // GL3 accepts only Triangles. Quads are not supported
     static const GLfloat vertex_buffer_data [] = {
-    -0.1, 0, 0,
-    0.1, 0, 0, 
-    0, 0.1, 0,
+	-0.1, 0, 0,
+	0.1, 0, 0, 
+	0, 0.1, 0,
     };
 
     static const GLfloat color_buffer_data [] = {
-    1, 1, 1,
-    1, 1, 1,
-    1, 1, 1,
+	1, 1, 1,
+	1, 1, 1,
+	1, 1, 1,
     };
 
     // create3DObject creates and returns a handle to a VAO that can be used later
     cam = create3DObject(GL_TRIANGLES, 1*3, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
+/*void createFloor ()
+{
+    // GL3 accepts only Triangles. Quads are not supported
+    static const GLfloat vertex_buffer_data [] = {
+	-2, -1, 2,
+	2, -1, 2, 
+	-2, -1, -2,
+	-2, -1, -2,
+	2, -1, 2, 
+	2, -1, -2,
+    };
+
+    static const GLfloat color_buffer_data [] = {
+	0.65, 0.165, 0.165,
+	0.65, 0.165, 0.165,
+	0.65, 0.165, 0.165,
+	0.65, 0.165, 0.165,
+	0.65, 0.165, 0.165,
+	0.65, 0.165, 0.165,
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    floor_vao = create3DObject(GL_TRIANGLES, 2*3, vertex_buffer_data, color_buffer_data, GL_FILL);
+}*/
+
 void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3,COLOR color4,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
 {
     // GL3 accepts only Triangles. Quads are not supported
     float w=width/2,h=height/2,d=depth/2;
     GLfloat vertex_buffer_data [] = {
-        -w,-h,d, // vertex 1
+        /*-w,-h,d, // vertex 1
         w,-h,d, // vertex 2
         -w,-h,-d, // vertex 3
         -w,-h,-d, // vertex 3
         w,-h,d, // vertex 4
-        w,-h,-d  // vertex 1
+        w,-h,-d  // vertex 1*/
+        -w, h, d,
+        -w, -h, d, 
+        w, -h, d,
+        -w, h, d, 
+        w, -h, d,
+        w, h, d,
+        w, h, d,
+        w, -h, d,
+        w, -h, -d,
+        w, h, d,
+        w, -h, -d,
+        w, h, -d,
+        w, h, -d,
+        w, -h, -d,
+        -w, -h, -d,
+        w, h, -d,
+        -w, -h, -d,
+        -w, h, -d,
+        -w, h, -d,
+        -w, -h, -d,
+        -w, -h, d, 
+        -w, h, -d,
+        -w, -h, d, 
+        -w, h, d, 
+        -w, h, -d,
+        -w, h, d, 
+        w, h, d,
+        -w, h, -d,
+        w, h, d,
+        w, h, -d,
+        -w, -h, d, 
+        -w, -h, -d,
+        w, -h, -d,
+        -w, -h, d, 
+        w, -h, -d,
+        w, -h, d,
+        -w, h, d,
+        w, h, -d,
+        w, h, -d,
     };
 
     GLfloat color_buffer_data [] = {
+        color4.r,color4.g,color4.b, // color 1
+        color4.r,color4.g,color4.b, // color 2
+        color4.r,color4.g,color4.b, // color 3
+
+        color4.r,color4.g,color4.b, // color 4
+        color4.r,color4.g,color4.b, // color 5
+        color4.r,color4.g,color4.b, // color 6
+
+        color4.r,color4.g,color4.b, // color 1
+        color4.r,color4.g,color4.b, // color 2
+        color4.r,color4.g,color4.b, // color 3
+
+        color4.r,color4.g,color4.b, // color 4
+        color4.r,color4.g,color4.b, // color 5
+        color4.r,color4.g,color4.b, // color 6
+
+        color4.r,color4.g,color4.b, // color 1
+        color4.r,color4.g,color4.b, // color 2
+        color4.r,color4.g,color4.b, // color 3
+
+        color4.r,color4.g,color4.b, // color 4
+        color4.r,color4.g,color4.b, // color 5
+        color4.r,color4.g,color4.b, // color 6
+
+        color4.r,color4.g,color4.b, // color 1
+        color4.r,color4.g,color4.b, // color 2
+        color4.r,color4.g,color4.b, // color 3
+
+        color4.r,color4.g,color4.b, // color 4
+        color4.r,color4.g,color4.b, // color 5
+        color4.r,color4.g,color4.b, // color 6
+
         color.r,color.g,color.b, // color 1
         color2.r,color2.g,color2.b, // color 2
         color3.r,color3.g,color3.b, // color 3
 
         color3.r,color3.g,color3.b, // color 4
         color4.r,color4.g,color4.b, // color 5
-        color.r,color.g,color.b // color 6
+        color.r,color.g,color.b, // color 6
+
+        color.r,color.g,color.b, // color 1
+        color2.r,color2.g,color2.b, // color 2
+        color3.r,color3.g,color3.b, // color 3
+
+        color3.r,color3.g,color3.b, // color 4
+        color4.r,color4.g,color4.b, // color 5
+        color.r,color.g,color.b, // color 6
     };
 
     // create3DObject creates and returns a handle to a VAO that can be used later
-    VAO *tile = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+    VAO *tile = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
     Game InstanceGame = {};
     InstanceGame.color = color;
     InstanceGame.name = name;
@@ -559,7 +794,7 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
     InstanceGame.width=width;
     InstanceGame.depth=depth;
     InstanceGame.radius=(sqrt(height*height+width*width+depth*depth))/2;
-    InstanceGame.angle=angle;
+    InstanceGame.angle_x=angle;
     InstanceGame.status=status;
     InstanceGame.numx=numx;
     InstanceGame.numy=numy;
@@ -569,15 +804,20 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         background[name]=InstanceGame;
 }
 
-float camera_rotation_angle = camera_rot;
+float camera_rotation_angle = 90;
 
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
-void draw (GLFWwindow* window,int doM, int doV, int doP)
+float angle;
+int rep=0,fl=0;
+glm::mat4 rotateTriangle2;
+glm::mat4 rotateTriangle1;
+void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, int doP)
 {
-    //int fbwidth, fbheight;
-    //glfwGetFramebufferSize(window, &fbwidth, &fbheight);
-    //glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
+
+    int fbwidth, fbheight;
+    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
+    glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
 
 
     // use the loaded shader program
@@ -585,46 +825,194 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     glUseProgram(programID);
 
     // Eye - Location of camera. Don't change unless you are sure!!
-    glm::vec3 eye ( -4, 14, 14);
+    /*camera_radius=1;
+    angle=90;
+    target_x=0;
+    target_y=0;
+    target_z=0;
+    eye_x=-4;
+    eye_y=12;
+    eye_z=-4;*/
+    float temp1,temp2,temp3;
+    temp1= (cube["cube1"].x+cube["cube2"].x)/2;
+    temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
+    temp3 = (cube["cube1"].z+cube["cube2"].z)/2;
+    if(camera_top==1)
+    {
+        eye_x = 0+cos(45*M_PI/180);
+        eye_z = 0;
+        //+sin(45*M_PI/180);
+        eye_y=20;
+        target_x=0;
+        target_y=0;
+        target_z=0;
+        /*eye_x = temp1;
+        eye_z = temp3;
+        eye_y= 10;
+        target_x = temp1;
+        target_y = 0;
+        target_z = temp3;*/
+        //fps_head_offset=0;
+        //fps_head_offset_x=0;
+        //camera_fov=1.3;
+    }
+    if(camera_tower==1)
+    {
+        eye_x = 15,
+        eye_y = 15;
+        eye_z = 0;
+        target_z = 0;
+        target_y = 0;
+        target_x = 0;    
+    }
+    if(camera_follow==1)
+    {
+        if(orient_left==1)
+        {
+            eye_x = temp1-5;
+            eye_y = temp2;
+            eye_z = temp3;
+            target_x = 1000;
+            target_y = temp2;
+            target_z = temp3;
+        }
+        else if(orient_right==1)
+        {
+            eye_x = temp1+5;
+            eye_y = temp2;
+            eye_z = temp3;
+            target_x = -1000;
+            target_y = temp2;
+            target_z = temp3;
+        }
+        else if(orient_backward==1)
+        {
+            eye_x = temp1;
+            eye_y = temp2;
+            eye_z = temp3+5;
+            target_x = temp1;
+            target_y = temp2;
+            target_z = -1000;
+        }
+        else
+        {
+            eye_x = temp1;
+            eye_y = temp2;
+            eye_z = temp3-5;
+            target_x = temp1;
+            target_y = temp2;
+            target_z = 1000;
+        }
+    }
+    if(camera_self==1)
+    {
+        if(orient_left==1)
+        {
+            eye_x = temp1-3;
+            eye_y = temp2;
+            eye_z = temp3;
+            target_x = -1000;
+            target_y = temp2;
+            target_z = temp3;
+        }
+        else if(orient_right==1)
+        {
+            eye_x = temp1+3;
+            eye_y = temp2;
+            eye_z = temp3;
+            target_x = 1000;
+            target_y = temp2;
+            target_z = temp3;
+        }
+        else if(orient_backward==1)
+        {
+            eye_x = temp1;
+            eye_y = temp2;
+            eye_z = temp3-3;
+            target_x = temp1;
+            target_y = temp2;
+            target_z = -1000;
+        }
+        else
+        {
+            eye_x = temp1;
+            eye_y = temp2;
+            eye_z = temp3+3;
+            target_x = temp1;
+            target_y = temp2;
+            target_z = 1000;
+        }
+    }
+    glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+    if(camera_helicopter==1)
+    {
+        if(mouse_click==1)
+        {
+            angle=(mouse_pos_x)*360/600;
+            eye_x = 20*cos(angle*M_PI/180);
+            eye_z = 20*sin(angle*M_PI/180);
+            target_x = 0;
+            target_z = 0;
+            target_y = 0;
+        }
+        if(right_mouse_click==1)
+        {
+            angle = 90-(mouse_pos_y)*90/600;
+            eye_y = 20*sin(angle*M_PI/180);
+            target_x = 0;
+            target_z = 0;
+            target_y = 0;
+        }
+    }
+    prev_mouse_pos_x = mouse_pos_x;
+    prev_mouse_pos_y = mouse_pos_y;
+    if(camera_self==0 && camera_follow==0)
+    {
+        orient_forward=1;
+        orient_right=0;
+        orient_left=0;
+        orient_backward=0;
+    }
+    glm::vec3 eye(eye_x,eye_y,eye_z);
+    //glm::vec3 eye ( 8*sin(camera_rotation_angle*M_PI/180.0f), 3, 8*sin(camera_rotation_angle*M_PI/180.0f) );
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (0, 0, 0);
+    glm::vec3 target (target_x,target_y,target_z);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up (0, 1, 0);
 
     // Compute Camera matrix (view)
     if(doV)
-    Matrices.view = glm::lookAt(eye, target, up); // Fixed camera for 2D (ortho) in XY plane
+	Matrices.view = glm::lookAt(eye, target, up); // Fixed camera for 2D (ortho) in XY plane
     else
-    Matrices.view = glm::mat4(1.0f);
+	Matrices.view = glm::mat4(1.0f);
 
     // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
     glm::mat4 VP;
     if (doP)
-    VP = Matrices.projection * Matrices.view;
+	VP = Matrices.projection * Matrices.view;
     else
-    VP = Matrices.view;
+	VP = Matrices.view;
 
     // Send our transformation to the currently bound shader, in the "MVP" uniform
     // For each model you render, since the MVP will be different (at least the M part)
-    glm::mat4 MVP;  // MVP = Projection * View * Model
+    glm::mat4 MVP;	// MVP = Projection * View * Model
 
-    /*// Load identity to model matrix
+    // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
-
-    glm::mat4 translateRectangle = glm::translate (rect_pos);        // glTranslatef
+    /*glm::mat4 translateRectangle = glm::translate (rect_pos);        // glTranslatef
     glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));
     Matrices.model *= (translateRectangle * rotateRectangle);
     if(floor_rel)
-    Matrices.model = Matrices.model * glm::translate(floor_pos);
+	Matrices.model = Matrices.model * glm::translate(floor_pos);
     if(doM)
-    MVP = VP * Matrices.model;
+	MVP = VP * Matrices.model;
     else
-    MVP = VP;
+	MVP = VP;
 
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(rectangle);*/
+    draw3DObject(rectangle);
 
     // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
@@ -636,38 +1024,329 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
     // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(cam);
-
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    //draw3DObject(floor_vao);
-    for(int i=0;i<10;i++)
+    draw3DObject(cam);*/
+    
+    //createtile("tile",0,brown1,brown1,brown1,brown1,0,0,0,0.5,0.5,0.5,"tile",0,0,0);
+    /*if(gamemap[int(cube["cube1"].x/2)+3][int(cube["cube1"].z/2)+3]==0)
     {
-        for(int j=0;j<10;j++)
-        {
-            if(gamemap[i][j]>2)
-            {
+        quit(window);
+    }
+    if(gamemap[int(cube["cube2"].x/2)+3][int(cube["cube2"].z/2)+3]==0)
+    {
+        quit(window);
+    }*/
 
-                if(cuboid["cuboid"].x>2*(i-3)-1 && cuboid["cuboid"].x<2*(i-3)+1 && cuboid["cuboid"].z>2*(j-3)-1 && cuboid["cuboid"].z<2*(j-3)+1)
-                {
-                string c="tile";
-                char d=k+'0';
-                string e=c+d;
-                int ones = gamemap[i][j]%10;
-                int temp = gamemap[i][j]/10;
-                int tens = gamemap[i][j]%10;
-                if(gamemap[ones][tens]==0)
-                {
-                    cout << "hello" << endl;
-                    gamemap[ones][tens] = 2;
-                    createtile(e,0,gold,gold,gold,gold,2*(ones-3),-1,2*(tens-3),1,2,2,"tile",0,i,j);
-                    k++;
-                }
-        
-                }
+    if(down1==1)
+    {
+        float ch1,ch2;
+        ch1=cube["cube1"].y;
+        ch2=cube["cube2"].y;
+        if(ch1==ch2)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].x>cube["cube2"].x)
+            {
+                //cube["cube2"].y=2.5;
+                //cube["cube2"].x=cube["cube1"].x;
+                cube["cube2"].x+=0.4;
+                cube["cube1"].x+=0.2;
+                cube["cube2"].y+=0.2;
+            }
+            else if(cube["cube1"].x<cube["cube2"].x)
+            {
+                cube["cube1"].y+=0.2;
+                //cube["cube1"].x=cube["cube2"].x;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].x+=0.4;
+            }
+            else
+            {
+                cube["cube1"].x+=0.2;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].x=cube["cube2"].x;
             }
         }
-    }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].x+=0.4;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
 
+            }
+            else
+            {
+                cube["cube2"].x+=0.4;
+                cube["cube1"].x+=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_z-=9;
+        cube["cube2"].angle_z-=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            down1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].x=cube["cube2"].x;
+            }
+            fl=0;
+        }
+    }
+    if(up1==1)
+    {
+        if(cube["cube1"].y==cube["cube2"].y)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].x>cube["cube2"].x)
+            {
+                //cube["cube2"].y=2.5;
+                //cube["cube2"].x=cube["cube1"].x;
+                cube["cube2"].x-=0.2;
+                cube["cube1"].x-=0.4;
+                cube["cube1"].y+=0.2;
+            }
+            else if(cube["cube1"].x<cube["cube2"].x)
+            {
+                cube["cube2"].y+=0.2;
+                //cube["cube1"].x=cube["cube2"].x;
+                cube["cube1"].x-=0.2;
+                cube["cube2"].x-=0.4;
+            }
+            else
+            {
+                cube["cube1"].x-=0.2;
+                cube["cube2"].x-=0.2;
+                cube["cube1"].x=cube["cube2"].x;
+            }
+        }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].x-=0.4;
+                cube["cube2"].x-=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
+
+            }
+            else
+            {
+                cube["cube2"].x-=0.4;
+                cube["cube1"].x-=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_z+=9;
+        cube["cube2"].angle_z+=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            up1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].x=cube["cube2"].x;
+            }
+            fl=0;
+        }
+    }
+    if(left1==1)
+    {
+        if(cube["cube1"].y==cube["cube2"].y)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].z>cube["cube2"].z)
+            {
+                //cube["cube2"].y=2.5;
+                //cube["cube2"].x=cube["cube1"].x;
+                cube["cube2"].z+=0.4;
+                cube["cube1"].z+=0.2;
+                cube["cube2"].y+=0.2;
+            }
+            else if(cube["cube1"].z<cube["cube2"].z)
+            {
+                cube["cube1"].y+=0.2;
+                //cube["cube1"].x=cube["cube2"].x;
+                cube["cube1"].z+=0.4;
+                cube["cube2"].z+=0.2;
+            }
+            else
+            {
+                cube["cube1"].z+=0.2;
+                cube["cube2"].z+=0.2;
+                cube["cube1"].z=cube["cube2"].z;
+            }
+        }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].z+=0.4;
+                cube["cube2"].z+=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
+
+            }
+            else
+            {
+                cube["cube2"].z+=0.4;
+                cube["cube1"].z+=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_x+=9;
+        cube["cube2"].angle_x+=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            left1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].z=cube["cube2"].z;
+            }
+            fl=0;
+        }
+    }
+    if(right1==1)
+    {
+        if(cube["cube1"].y==cube["cube2"].y)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].z>cube["cube2"].z)
+            {
+                cube["cube1"].z-=0.4;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].y+=0.2;
+            }
+            else if(cube["cube1"].z<cube["cube2"].z)
+            {
+                cube["cube2"].y+=0.2;
+                //cube["cube1"].x=cube["cube2"].x;
+                cube["cube2"].z-=0.4;
+                cube["cube1"].z-=0.2;
+            }
+            else
+            {
+                cube["cube1"].z-=0.2;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].z=cube["cube2"].z;
+            }
+        }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].z-=0.4;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
+
+            }
+            else
+            {
+                cube["cube2"].z-=0.4;
+                cube["cube1"].z-=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_x-=9;
+        cube["cube2"].angle_x-=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            right1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].z=cube["cube2"].z;
+            }
+            fl=0;
+        }
+    }
+    /*if(cube["cube1"].y!=cube["cube2"].y)
+    {
+        if(cube["cube1"].y<cube["cube2"].y)
+        {
+            if(gamemap[int(cube["cube1"].x/2)+3][int(cube["cube1"].z/2)+3]==2)
+            {
+                quit(window);
+            }
+        }
+        else
+        {
+            if(gamemap[int(cube["cube2"].x/2)+3][int(cube["cube2"].z/2)+3]==2)
+            {
+                quit(window);
+            }
+        }
+    }*/
+    for(map<string,Game>::iterator it=background.begin();it!=background.end();it++){
+        string current = it->first; //The name of the current object
+        glm::mat4 MVP;  // MVP = Projection * View * Model
+
+        Matrices.model = glm::mat4(1.0f);
+
+        glm::mat4 ObjectTransform;
+        glm::mat4 translateObject = glm::translate (glm::vec3(background[current].x,background[current].y, background[current].z)); 
+        glm::mat4 rotateTriangle = glm::rotate((float)((background[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
+        ObjectTransform=translateObject*rotateTriangle;
+        Matrices.model *= ObjectTransform;
+        //MVP = VP * Matrices.model; // MVP = p * V * M
+        if(doM)
+            MVP = VP * Matrices.model;
+        else
+            MVP = VP;
+        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+        draw3DObject(background[current].object);
+        //glPopMatrix (); 
+    }
     for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
         string current = it->first; //The name of the current object
         glm::mat4 MVP;  // MVP = Projection * View * Model
@@ -676,7 +1355,7 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
 
         glm::mat4 ObjectTransform;
         glm::mat4 translateObject = glm::translate (glm::vec3(tiles[current].x,tiles[current].y, tiles[current].z)); 
-        glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
+        glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
         ObjectTransform=translateObject*rotateTriangle;
         Matrices.model *= ObjectTransform;
         //MVP = VP * Matrices.model; // MVP = p * V * M
@@ -689,92 +1368,14 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
         draw3DObject(tiles[current].object);
         //glPopMatrix (); 
     }
-
-
-    for(map<string,Game>::iterator it=cuboid.begin();it!=cuboid.end();it++){
+    for(map<string,Game>::iterator it=cube.begin();it!=cube.end();it++){
         string current = it->first; //The name of the current object
         glm::mat4 MVP;  // MVP = Projection * View * Model
-
         Matrices.model = glm::mat4(1.0f);
-
         glm::mat4 ObjectTransform;
-        if(x_flag_left==1)
-        {
-            cuboid[current].x -= rect_pos_x+0.5;
-            if(lay_down==1)
-            {
-                cuboid[current].angle += 90;
-                stand_up = 1;
-                lay_down = 0;
-            }
-
-            else if(stand_up==1)
-            {
-                cuboid[current].x += 0.5;
-                cuboid[current].x += 0.5;
-                cuboid[current].angle -= 90;
-                stand_up = 0;
-                lay_down = 1;
-            }
-
-        }
-
-        if(x_flag_right==1)
-        {
-            cuboid[current].x += rect_pos_x+1.5;
-            if(lay_down==1)
-            {
-                cuboid[current].angle += 90;
-                stand_up = 1;
-                lay_down = 0;
-            }
-
-            else if(stand_up==1)
-            {
-                cuboid[current].x -= 0.5;
-                cuboid[current].x -= 0.5;
-                cuboid[current].angle -= 90;
-                stand_up = 0;
-                lay_down = 1;
-            }
-        }
-
-        if(z_flag_out==1)
-        {
-            cuboid[current].z += rect_pos_z+1.5;
-            if(lay_down==1)
-            {
-                cuboid[current].z -= 1.5;
-            }
-            else if(stand_up==1)
-            {
-                cuboid[current].z -= 1.5;
-            }
-        }
-        if(z_flag_in==1)
-        {
-            cuboid[current].z -= rect_pos_z+0.5;
-
-            if(lay_down==1)
-            {
-                cuboid[current].z += 0.5;
-            }
-
-            else if(stand_up==1)
-            {
-                cuboid[current].z += 0.5;
-            
-            }
-
-        }
-
-        glm::mat4 translateObject = glm::translate (glm::vec3(cuboid[current].x,cuboid[current].y, cuboid[current].z));
-    
-        glm::mat4 rotateTriangle = glm::rotate((float)((cuboid[current].angle)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
-        ObjectTransform=translateObject*rotateTriangle;
+        glm::mat4 translateObject = glm::translate (glm::vec3(cube[current].x,cube[current].y, cube[current].z));
+        ObjectTransform=translateObject*rotateTriangle1;
         Matrices.model *= ObjectTransform;
-
-        
         //MVP = VP * Matrices.model; // MVP = p * V * M
         if(doM)
             MVP = VP * Matrices.model;
@@ -782,14 +1383,14 @@ void draw (GLFWwindow* window,int doM, int doV, int doP)
             MVP = VP;
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-        x_flag_left = 0;
-        x_flag_right = 0;
-        z_flag_out = 0;
-        z_flag_in = 0;
-
-        draw3DObject(cuboid[current].object);
-        //glPopMatrix (); 
+        draw3DObject(cube[current].object);
     }
+    /*Matrices.model = glm::translate(floor_pos);
+    MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+    // draw3DObject draws the VAO given to it using current MVP matrix
+    draw3DObject(floor_vao);*/
 
 }
 
@@ -811,7 +1412,7 @@ GLFWwindow* initGLFW (int width, int height){
     window = glfwCreateWindow(width, height, "Sample OpenGL 3.3 Application", NULL, NULL);
 
     if (!window) {
-    exit(EXIT_FAILURE);
+	exit(EXIT_FAILURE);
         glfwTerminate();
     }
 
@@ -835,14 +1436,17 @@ void initGL (GLFWwindow* window, int width, int height)
     /* Objects should be created before any other gl function and shaders */
     // Create the models
     //createRectangle ();
-    createCam();
-
+    //createCam();
+    //createFloor();
+	
     // Create and compile our GLSL program from the shaders
     programID = LoadShaders( "Sample_GL.vert", "Sample_GL.frag" );
     // Get a handle for our "MVP" uniform
     Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
 
-    int i,j;
+	int k=0,i,j;
+    //createtile("background",0,skyblue2,skyblue1,skyblue1,skyblue4,0,0,0,1000,1000,1000,"background",0,0,0);
+    //createRectangle("background1",0,skyblue2,skyblue1,skyblue,skyblue4,300,0,0,height,0,width,"background",0,0,0);
     for(i=0;i<10;i++)
     {
 
@@ -857,24 +1461,14 @@ void initGL (GLFWwindow* window, int width, int height)
                 string e=c+d;
                 if((i+j)%2==0)
                 { 
-                    createtile(e,0,brown1,brown1,brown1,brown1,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                    createtile(e,0,brown1,brown1,brown1,brown1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 }
                 else
                 {
-                    createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                    createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 }
                 k++;
             }
-
-            /*else if(gamemap[i][j]==2)
-            {
-                string c="tile";
-                char d=k+'0';
-                string e=c+d;
-
-                createtile(e,0,gold,gold,gold,gold,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
-                k++;
-            }*/
 
             else if(gamemap[i][j]>2)
             {
@@ -882,15 +1476,14 @@ void initGL (GLFWwindow* window, int width, int height)
                 char d=k+'0';
                 string e=c+d;
 
-                createtile(e,0,blue,blue,blue,blue,2*(i-3),-1,2*(j-3),1,2,2,"tile",0,i,j);
+                createtile(e,0,blue,blue,blue,blue,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
 
                 k++;
             }        
         }
     }
-
-    createRectangle("cuboid",0,brown2,brown2,brown2,brown2,0.5,0,0.1,2,4,2,"cuboid",0,0,0);
-
+    createRectangle("cube1",0,red,red,red,red,12,0.25,-4,2,2,2,"cube",0,0,0);
+    createRectangle("cube2",0,red,red,red,red,12,2.25,-4,2,2,2,"cube",0,0,0);
     reshapeWindow (window, width, height);
 
     // Background color of the scene
@@ -908,8 +1501,8 @@ void initGL (GLFWwindow* window, int width, int height)
 
 int main (int argc, char** argv)
 {
-    int width = 800;
-    int height = 800;
+    int width = 600;
+    int height = 600;
     do_rot = 0;
     floor_rel = 1;
 
@@ -920,20 +1513,21 @@ int main (int argc, char** argv)
     /* Draw in loop */
     while (!glfwWindowShouldClose(window)) {
 
-    // clear the color and depth in the frame buffer
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// clear the color and depth in the frame buffer
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // OpenGL Draw commands
-    current_time = glfwGetTime();
-    /*if(do_rot)
-        camera_rotation_angle += 90*(current_time - last_update_time); // Simulating camera rotation
-    if(camera_rotation_angle > 720)
-        camera_rotation_angle -= 720;*/
-    last_update_time = current_time;
-    draw(window, 1, 1, 1);
-    //draw(window, 0.5, 0, 0.5, 0.5, 0, 1, 1);
-    //draw(window, 0, 0.5, 0.5, 0.5, 1, 0, 1);
-    //draw(window, 0.5, 0.5, 0.5, 0.5, 0, 0, 1);
+	current_time = glfwGetTime();
+    angle=135;
+	/*if(do_rot)
+	    camera_rotation_angle += 90*(current_time - last_update_time); // Simulating camera rotation
+	if(camera_rotation_angle > 720)
+	    camera_rotation_angle -= 720;*/
+	last_update_time = current_time;
+	draw(window, 0, 0 ,1,1,1, 1, 1);
+	//draw(window, 0.5,0, 0.5, 1, 0, 1, 1);
+	//draw(window, 0, 0.5, 0.5, 0.5, 1, 0, 1);
+	//draw(window, 0.5, 0.5, 0.5, 0.5, 0, 0, 1);
 
         // Swap Frame Buffer in double buffering
         glfwSwapBuffers(window);
