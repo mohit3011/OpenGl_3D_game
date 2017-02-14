@@ -84,6 +84,9 @@ struct Game {
 map <string, Game> tiles;
 map <string, Game> background;
 map <string, Game> cube;
+map <string, Game> scoredisp;
+map <string, Game> life;
+map <string, Game> welcomeback;
 
 int gamemap[10][10]={
     {1,1,1,1,25,0,1,1,0,0},
@@ -104,10 +107,44 @@ struct GLMatrices {
     GLuint MatrixID;
 } Matrices;
 
-int do_rot, floor_rel;;
+int do_rot, floor_rel;
 GLuint programID;
 double last_update_time, current_time;
 float rectangle_rotation = 0;
+
+
+
+float rectangle_rot_dir = 1;
+bool rectangle_rot_status = true;
+int up1=0,down1=0,right1=0,left1=0;
+
+int user_score = 0;
+int user_life = 3;
+int k_tile=0;
+
+float eye_x_1,eye_y_1,eye_z_1;
+float target_x_1,target_y_1,target_z_1;
+int camera_follow=0;
+int camera_follow_adjust_1=0;
+int camera_top=0;
+int camera_fps=0;
+float camera_radius;
+float camera_fov=1.3;
+float fps_head_offset=0;
+float fps_head_offset_x=0;
+int camera_tower=1;
+int camera_helicopter=0;
+int camera_self=0;
+int orient_right=0;
+int orient_left=0;
+int orient_forward=0;
+int orient_backward=0;
+int mouse_click=0,right_mouse_click=0;
+int keyboard_press=0;
+double mouse_pos_x, mouse_pos_y;
+double prev_mouse_pos_x,prev_mouse_pos_y;
+
+
 
 /* Function to load Shaders - Use it as it is */
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path) {
@@ -279,32 +316,106 @@ void draw3DObject (struct VAO* vao)
  * Customizable functions *
  **************************/
 
-float rectangle_rot_dir = 1;
-bool rectangle_rot_status = true;
-int up1=0,down1=0,right1=0,left1=0;
+
+void setStrokes(char val){
+    scoredisp["top"].status=0;
+    scoredisp["bottom"].status=0;
+    scoredisp["middle"].status=0;
+    scoredisp["left1"].status=0;
+    scoredisp["left2"].status=0;
+    scoredisp["right1"].status=0;
+    scoredisp["right2"].status=0;
+    scoredisp["middle1"].status=0;
+    scoredisp["middle2"].status=0;
+    scoredisp["diagonal"].status=0;
+    if(val=='0' || val=='2' || val=='C' || val=='A' || val=='3' || val=='5' || val=='F' || val=='6'|| val=='R' || val=='7' || val=='8' || val=='9' || val=='P' || val=='I' || val=='O' || val=='N' || val=='T' || val=='S' || val=='E'){
+        scoredisp["top"].status=1;
+    }
+    if(val=='2' || val=='3' || val=='4' || val=='5' || val=='A' || val=='6' || val=='R'  || val=='F'  || val=='8' || val=='9' || val=='P' || val=='S' || val=='Y' || val=='E'){
+
+        scoredisp["middle"].status=1;
+    }
+    if(val=='0' || val=='2' || val=='3' || val=='C' || val=='5' || val=='6' || val=='8' || val=='9' || val=='O' || val=='S' || val=='I' || val=='Y' || val=='U' || val=='L' || val=='E' || val=='W'){
+        scoredisp["bottom"].status=1;
+    }
+    if(val=='0' || val=='4' || val=='5' || val=='6' || val=='C' || val=='A' || val=='8' || val=='F'  || val=='9' || val=='P' || val=='R' || val=='O' || val=='N' || val=='S' || val=='Y' || val=='U' || val=='L' || val=='E' || val=='W'){
+        scoredisp["left1"].status=1;
+    }
+    if(val=='0' || val=='2' || val=='6' || val=='8' || val=='P' || val=='C' || val=='A' || val=='F'  || val=='O' || val=='N' || val=='U' || val=='R' || val=='L' || val=='E' || val=='W'){
+        scoredisp["left2"].status=1;
+    }
+    if(val=='0' || val=='2' || val=='3' || val=='4' || val=='7' || val=='8' || val=='A' || val=='R' || val=='9' || val=='P' || val=='O' || val=='N' || val=='Y' || val=='U' || val=='W'){
+        scoredisp["right1"].status=1;
+    }
+    if(val=='0' || val=='3' || val=='4' || val=='5' || val=='6' || val=='7' || val=='8'  || val=='A' || val=='9' || val=='O' || val=='N' || val=='S' || val=='Y' || val=='U' || val=='W'){
+        scoredisp["right2"].status=1;
+    }
+    if(val=='I' || val=='T' || val=='1'){
+        scoredisp["middle1"].status=1;
+    }
+    if(val=='I' || val=='T' || val=='W' || val=='1'){
+        scoredisp["middle2"].status=1;
+    }
+
+    if(val=='R')
+    {
+        scoredisp["diagonal"].status = 1;
+    }
+}
 
 
-float eye_x,eye_y,eye_z;
-float target_x,target_y,target_z;
-int camera_follow=0;
-int camera_follow_adjust=0;
-int camera_top=0;
-int camera_fps=0;
-float camera_radius;
-float camera_fov=1.3;
-float fps_head_offset=0;
-float fps_head_offset_x=0;
-int camera_tower=1;
-int camera_helicopter=0;
-int camera_self=0;
-int orient_right=0;
-int orient_left=0;
-int orient_forward=0;
-int orient_backward=0;
-int mouse_click=0,right_mouse_click=0;
-int keyboard_press=0;
-double mouse_pos_x, mouse_pos_y;
-double prev_mouse_pos_x,prev_mouse_pos_y;
+/*void createcircle (string name, float angle, COLOR color,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
+{
+    int parts = 1000;
+    GLfloat vertex_buffer_data[parts*9];
+    GLfloat color_buffer_data[parts*9];
+    int i,j;
+    float angle=(2*M_PI/parts);
+    float current_angle = 0;
+    for(i=0;i<parts;i++){
+        for(j=0;j<3;j++){
+            color_buffer_data[i*9+j*3]=color.r;
+            color_buffer_data[i*9+j*3+1]=color.g;
+            color_buffer_data[i*9+j*3+2]=color.b;
+        }
+        vertex_buffer_data[i*9]=0;
+        vertex_buffer_data[i*9+1]=0;
+        vertex_buffer_data[i*9+2]=0;
+        vertex_buffer_data[i*9+3]=rx*cos(current_angle);
+        vertex_buffer_data[i*9+4]=ry*sin(current_angle);
+        vertex_buffer_data[i*9+5]=0;
+        vertex_buffer_data[i*9+6]=rx*cos(current_angle+angle);
+        vertex_buffer_data[i*9+7]=ry*sin(current_angle+angle);
+        vertex_buffer_data[i*9+8]=0;
+        current_angle+=angle;
+    }
+    VAO* circle;
+    if(fill==1)
+        circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_FILL);
+    else
+        circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_LINE);
+    
+    Game InstanceGame = {};
+    InstanceGame.color = color;
+    InstanceGame.name = name;
+    InstanceGame.object = circle;
+    InstanceGame.x=x;
+    InstanceGame.y=y;
+    InstanceGame.z=z;
+    InstanceGame.height=2*height;
+    InstanceGame.width=2*width;
+    InstanceGame.depth=depth;
+    InstanceGame.radius=height;
+    InstanceGame.angle_x=angle;
+    InstanceGame.status=status;
+    InstanceGame.numx=numx;
+    InstanceGame.numy=numy;
+
+    if(component=="life")
+        life[name]=InstanceGame;
+    
+}*/
+
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
 
@@ -340,6 +451,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             down1=0;
             right1=0;
             left1=0;
+            user_score += 1;
         }
         break;
     case GLFW_KEY_DOWN:
@@ -349,6 +461,8 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             up1=0;
             right1=0;
             left1=0;
+            user_score += 1;
+
         }
         break;
     case GLFW_KEY_LEFT:
@@ -358,6 +472,8 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             left1=1;
             up1=0;
             down1=0;
+            user_score += 1;
+
         }
         break;
     case GLFW_KEY_RIGHT:
@@ -367,6 +483,8 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             left1=0;
             up1=0;
             down1=0;
+            user_score += 1;
+
         }
         break;
     case GLFW_KEY_T:
@@ -512,130 +630,6 @@ void mouseButton (GLFWwindow* window, int button, int action, int mods)
 VAO *rectangle, *cam, *floor_vao;
 
 // Creates the rectangle object used in this sample code
-void createRectangle (string name, float angle, COLOR color,COLOR color2,COLOR color3,COLOR color4,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
-{
-    // GL3 accepts only Triangles. Quads are not supported
-    float w=width/2,h=height/2,d=depth/2;
-    static const GLfloat vertex_buffer_data [] = {
-	-w, h, d, 
-	-w, -h, d, 
-	w, -h, d,
-	-w, h, d, 
-	w, -h, d,
-	w, h, d,
-	w, h, d,
-	w, -h, d,
-	w, -h, -d,
-	w, h, d,
-	w, -h, -d,
-	w, h, -d,
-	w, h, -d,
-	w, -h, -d,
-	-w, -h, -d,
-	w, h, -d,
-	-w, -h, -d,
-	-w, h, -d,
-	-w, h, -d,
-	-w, -h, -d,
-	-w, -h, d, 
-	-w, h, -d,
-	-w, -h, d, 
-	-w, h, d, 
-	-w, h, -d,
-	-w, h, d, 
-	w, h, d,
-	-w, h, -d,
-	w, h, d,
-	w, h, -d,
-	-w, -h, d, 
-	-w, -h, -d,
-	w, -h, -d,
-	-w, -h, d, 
-	w, -h, -d,
-	w, -h, d,
-	-w, h, d,
-	w, h, -d,
-	w, h, -d,
-    };
-
-    static const GLfloat color_buffer_data [] = {
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6
-
-
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6
-
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6
-        
-
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6
-        
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6
-        
-        color.r,color.g,color.b, // color 1
-        color.r,color.g,color.b, // color 2
-        color2.r,color2.g,color2.b, // color 3
-
-        color2.r,color2.g,color2.b, // color 4
-        color2.r,color2.g,color2.b, // color 5
-        color.r,color.g,color.b, // color 6=
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    rectangle = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color_buffer_data, GL_FILL);
-    Game InstanceGame = {};
-    InstanceGame.color = color;
-    InstanceGame.name = name;
-    InstanceGame.object = rectangle;
-    InstanceGame.x=x;
-    InstanceGame.y=y;
-    InstanceGame.z=z;
-    InstanceGame.height=height;
-    InstanceGame.width=width;
-    InstanceGame.depth=depth;
-    InstanceGame.radius=(sqrt(height*height+width*width+depth*depth))/2;
-    InstanceGame.angle_x=angle;
-    InstanceGame.angle_y=angle;
-    InstanceGame.angle_z=angle;
-    InstanceGame.status=status;
-    InstanceGame.numx=numx;
-    InstanceGame.numy=numy;
-    if(component=="tile")
-        tiles[name]=InstanceGame;
-    else if(component=="background")
-        background[name]=InstanceGame;
-    else if(component=="cube")
-        cube[name]=InstanceGame;
-}
 void createCam ()
 {
     // GL3 accepts only Triangles. Quads are not supported
@@ -654,30 +648,6 @@ void createCam ()
     // create3DObject creates and returns a handle to a VAO that can be used later
     cam = create3DObject(GL_TRIANGLES, 1*3, vertex_buffer_data, color_buffer_data, GL_LINE);
 }
-/*void createFloor ()
-{
-    // GL3 accepts only Triangles. Quads are not supported
-    static const GLfloat vertex_buffer_data [] = {
-	-2, -1, 2,
-	2, -1, 2, 
-	-2, -1, -2,
-	-2, -1, -2,
-	2, -1, 2, 
-	2, -1, -2,
-    };
-
-    static const GLfloat color_buffer_data [] = {
-	0.65, 0.165, 0.165,
-	0.65, 0.165, 0.165,
-	0.65, 0.165, 0.165,
-	0.65, 0.165, 0.165,
-	0.65, 0.165, 0.165,
-	0.65, 0.165, 0.165,
-    };
-
-    // create3DObject creates and returns a handle to a VAO that can be used later
-    floor_vao = create3DObject(GL_TRIANGLES, 2*3, vertex_buffer_data, color_buffer_data, GL_FILL);
-}*/
 
 void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3,COLOR color4,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
 {
@@ -798,10 +768,25 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
     InstanceGame.status=status;
     InstanceGame.numx=numx;
     InstanceGame.numy=numy;
+
     if(component=="tile")
+    {
         tiles[name]=InstanceGame;
-    else if(component=="background")
-        background[name]=InstanceGame;
+    }
+    else if(component=="cube")
+    {
+        cube[name]=InstanceGame;
+    }
+    if(component=="score")
+    {        
+        scoredisp[name] = InstanceGame;
+        if(name=="diagonal")
+        {
+            scoredisp[name].angle_x = M_PI/4;
+        }
+
+    }
+    
 }
 
 float camera_rotation_angle = 90;
@@ -815,6 +800,35 @@ glm::mat4 rotateTriangle1;
 void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, int doP)
 {
 
+
+COLOR grey = {168.0/255.0,168.0/255.0,168.0/255.0};
+COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
+COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
+COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
+COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
+COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
+COLOR black = {30/255.0,30/255.0,21/255.0};
+COLOR blue = {0,0,1};
+COLOR darkbrown = {46/255.0,46/255.0,31/255.0};
+COLOR lightbrown = {95/255.0,63/255.0,32/255.0};
+COLOR brown1 = {117/255.0,78/255.0,40/255.0};
+COLOR brown2 = {134/255.0,89/255.0,40/255.0};
+COLOR brown3 = {46/255.0,46/255.0,31/255.0};
+COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
+COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
+COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
+COLOR skyblue2 = {113/255.0,185/255.0,209/255.0};
+COLOR skyblue1 = {123/255.0,201/255.0,227/255.0};
+COLOR skyblue = {132/255.0,217/255.0,245/255.0};
+COLOR slateblue = {106/255.0, 90/255.0, 205/255.0};
+COLOR cloudwhite = {229/255.0,255/255.0,255/255.0};
+COLOR cloudwhite1 = {204/255.0,255/255.0,255/255.0};
+COLOR lightpink = {255/255.0,122/255.0,173/255.0};
+COLOR darkpink = {255/255.0,51/255.0,119/255.0};
+COLOR white = {255/255.0,255/255.0,255/255.0};
+COLOR score = {117/255.0,78/255.0,40/255.0};
+  
+
     int fbwidth, fbheight;
     glfwGetFramebufferSize(window, &fbwidth, &fbheight);
     glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
@@ -827,120 +841,111 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
     // Eye - Location of camera. Don't change unless you are sure!!
     /*camera_radius=1;
     angle=90;
-    target_x=0;
-    target_y=0;
-    target_z=0;
-    eye_x=-4;
-    eye_y=12;
-    eye_z=-4;*/
+    target_x_1=0;
+    target_y_1=0;
+    target_z_1=0;
+    eye_x_1=-4;
+    eye_y_1=12;
+    eye_z_1=-4;*/
     float temp1,temp2,temp3;
     temp1= (cube["cube1"].x+cube["cube2"].x)/2;
-    temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
     temp3 = (cube["cube1"].z+cube["cube2"].z)/2;
+    temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
     if(camera_top==1)
     {
-        eye_x = 0+cos(45*M_PI/180);
-        eye_z = 0;
+        eye_x_1 = 0+cos(45*M_PI/180);
+        eye_z_1 = 0;
         //+sin(45*M_PI/180);
-        eye_y=20;
-        target_x=0;
-        target_y=0;
-        target_z=0;
-        /*eye_x = temp1;
-        eye_z = temp3;
-        eye_y= 10;
-        target_x = temp1;
-        target_y = 0;
-        target_z = temp3;*/
-        //fps_head_offset=0;
-        //fps_head_offset_x=0;
-        //camera_fov=1.3;
+        eye_y_1=20;
+        target_x_1=0;
+        target_y_1=0;
+        target_z_1=0;
     }
     if(camera_tower==1)
     {
-        eye_x = 15,
-        eye_y = 15;
-        eye_z = 0;
-        target_z = 0;
-        target_y = 0;
-        target_x = 0;    
+        eye_x_1 = 15,
+        eye_y_1 = 15;
+        eye_z_1 = 0;
+        target_z_1 = 0;
+        target_y_1 = 0;
+        target_x_1 = 0;    
     }
     if(camera_follow==1)
     {
         if(orient_left==1)
         {
-            eye_x = temp1-5;
-            eye_y = temp2;
-            eye_z = temp3;
-            target_x = 1000;
-            target_y = temp2;
-            target_z = temp3;
+            eye_x_1 = temp1-5;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3;
+            target_x_1 = 1000;
+            target_y_1 = temp2;
+            target_z_1 = temp3;
         }
         else if(orient_right==1)
         {
-            eye_x = temp1+5;
-            eye_y = temp2;
-            eye_z = temp3;
-            target_x = -1000;
-            target_y = temp2;
-            target_z = temp3;
+            eye_x_1 = temp1+5;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3;
+            target_x_1 = -1000;
+            target_y_1 = temp2;
+            target_z_1 = temp3;
         }
         else if(orient_backward==1)
         {
-            eye_x = temp1;
-            eye_y = temp2;
-            eye_z = temp3+5;
-            target_x = temp1;
-            target_y = temp2;
-            target_z = -1000;
+            eye_x_1 = temp1;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3+5;
+            target_x_1 = temp1;
+            target_y_1 = temp2;
+            target_z_1 = -1000;
         }
         else
         {
-            eye_x = temp1;
-            eye_y = temp2;
-            eye_z = temp3-5;
-            target_x = temp1;
-            target_y = temp2;
-            target_z = 1000;
+            eye_x_1 = temp1;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3-5;
+            target_x_1 = temp1;
+            target_y_1 = temp2;
+            target_z_1 = 1000;
         }
     }
     if(camera_self==1)
     {
         if(orient_left==1)
         {
-            eye_x = temp1-3;
-            eye_y = temp2;
-            eye_z = temp3;
-            target_x = -1000;
-            target_y = temp2;
-            target_z = temp3;
+            eye_x_1 = temp1-3;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3;
+            target_x_1 = -1000;
+            target_y_1 = temp2;
+            target_z_1 = temp3;
         }
         else if(orient_right==1)
         {
-            eye_x = temp1+3;
-            eye_y = temp2;
-            eye_z = temp3;
-            target_x = 1000;
-            target_y = temp2;
-            target_z = temp3;
+            eye_x_1 = temp1+3;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3;
+            target_x_1 = 1000;
+            target_y_1 = temp2;
+            target_z_1 = temp3;
         }
         else if(orient_backward==1)
         {
-            eye_x = temp1;
-            eye_y = temp2;
-            eye_z = temp3-3;
-            target_x = temp1;
-            target_y = temp2;
-            target_z = -1000;
+            eye_x_1 = temp1;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3-3;
+            target_x_1 = temp1;
+            target_y_1 = temp2;
+            target_z_1 = -1000;
         }
         else
         {
-            eye_x = temp1;
-            eye_y = temp2;
-            eye_z = temp3+3;
-            target_x = temp1;
-            target_y = temp2;
-            target_z = 1000;
+            eye_x_1 = temp1;
+            eye_y_1 = temp2;
+            eye_z_1 = temp3+3;
+            target_x_1 = temp1;
+            target_y_1 = temp2;
+            target_z_1 = 1000;
         }
     }
     glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
@@ -949,19 +954,19 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
         if(mouse_click==1)
         {
             angle=(mouse_pos_x)*360/600;
-            eye_x = 20*cos(angle*M_PI/180);
-            eye_z = 20*sin(angle*M_PI/180);
-            target_x = 0;
-            target_z = 0;
-            target_y = 0;
+            eye_x_1 = 20*cos(angle*M_PI/180);
+            eye_z_1 = 20*sin(angle*M_PI/180);
+            target_x_1 = 0;
+            target_z_1 = 0;
+            target_y_1 = 0;
         }
         if(right_mouse_click==1)
         {
             angle = 90-(mouse_pos_y)*90/600;
-            eye_y = 20*sin(angle*M_PI/180);
-            target_x = 0;
-            target_z = 0;
-            target_y = 0;
+            eye_y_1 = 20*sin(angle*M_PI/180);
+            target_x_1 = 0;
+            target_z_1 = 0;
+            target_y_1 = 0;
         }
     }
     prev_mouse_pos_x = mouse_pos_x;
@@ -973,10 +978,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
         orient_left=0;
         orient_backward=0;
     }
-    glm::vec3 eye(eye_x,eye_y,eye_z);
+    glm::vec3 eye(eye_x_1,eye_y_1,eye_z_1);
     //glm::vec3 eye ( 8*sin(camera_rotation_angle*M_PI/180.0f), 3, 8*sin(camera_rotation_angle*M_PI/180.0f) );
     // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (target_x,target_y,target_z);
+    glm::vec3 target (target_x_1,target_y_1,target_z_1);
     // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
     glm::vec3 up (0, 1, 0);
 
@@ -999,114 +1004,180 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
     // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
-    /*glm::mat4 translateRectangle = glm::translate (rect_pos);        // glTranslatef
-    glm::mat4 rotateRectangle = glm::rotate((float)(rectangle_rotation*M_PI/180.0f), glm::vec3(0,0,1));
-    Matrices.model *= (translateRectangle * rotateRectangle);
-    if(floor_rel)
-	Matrices.model = Matrices.model * glm::translate(floor_pos);
-    if(doM)
-	MVP = VP * Matrices.model;
-    else
-	MVP = VP;
-
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(rectangle);
-
-    // Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
-
-    glm::mat4 translateCam = glm::translate(eye);
-    glm::mat4 rotateCam = glm::rotate((float)((90 - camera_rotation_angle)*M_PI/180.0f), glm::vec3(0,1,0));
-    Matrices.model *= (translateCam * rotateCam);
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(cam);*/
-    
-    //createtile("tile",0,brown1,brown1,brown1,brown1,0,0,0,0.5,0.5,0.5,"tile",0,0,0);
-    /*if(gamemap[int(cube["cube1"].x/2)+3][int(cube["cube1"].z/2)+3]==0)
-    {
-        quit(window);
-    }
-    if(gamemap[int(cube["cube2"].x/2)+3][int(cube["cube2"].z/2)+3]==0)
-    {
-        quit(window);
-    }*/
-
-    if(down1==1)
-    {
-        float ch1,ch2;
-        ch1=cube["cube1"].y;
-        ch2=cube["cube2"].y;
-        if(ch1==ch2)
+    string scored = "score";
+        int ps_score = user_score;
+        int ones = ps_score%10;
+        ps_score = ps_score/10;
+        int tenth = ps_score%10;
+        ps_score = ps_score/10;
+        int hundreth = ps_score%10;
+        int k_s;
+        /*for(k_s=0;k_s<=11;k_s++)
         {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].x>cube["cube2"].x)
+            if(k_s==0)
             {
-                //cube["cube2"].y=2.5;
-                //cube["cube2"].x=cube["cube1"].x;
-                cube["cube2"].x+=0.4;
-                cube["cube1"].x+=0.2;
-                cube["cube2"].y+=0.2;
+                char inp = ones + '0';
+                setStrokes(inp);
             }
-            else if(cube["cube1"].x<cube["cube2"].x)
-            {
-                cube["cube1"].y+=0.2;
-                //cube["cube1"].x=cube["cube2"].x;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].x+=0.4;
-            }
-            else
-            {
-                cube["cube1"].x+=0.2;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].x=cube["cube2"].x;
-            }
-        }
-        else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].x+=0.4;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
 
-            }
-            else
+            if(k_s==1)
             {
-                cube["cube2"].x+=0.4;
-                cube["cube1"].x+=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
+                char inp = tenth + '0';
+                setStrokes(inp);
             }
-        }
-        cube["cube1"].angle_z-=9;
-        cube["cube2"].angle_z-=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
-        {
-            rep=0;
-            down1=0;
-            if(fl==0)
+
+            if(k_s==2)
             {
-                cube["cube1"].y=cube["cube2"].y;
+                char inp = hundreth + '0';
+                setStrokes(inp);
             }
-            if(fl==1)
+
+            if(k_s==3)
             {
-                cube["cube1"].x=cube["cube2"].x;
+                char inp = 'S';
+                setStrokes(inp);
             }
-            fl=0;
-        }
-    }
+
+            if(k==4)
+            {
+                char inp = 'C';
+                setStrokes(inp);
+            }
+
+            if(k==5)
+            {
+                char inp = 'O';
+                setStrokes(inp);
+            }
+
+            if(k==6)
+            {
+                char inp = 'R';
+                setStrokes(inp);
+            }
+            if(k==7)
+            {
+                char inp = 'E';
+                setStrokes(inp);
+            }
+            if(k==8)
+            {
+                char inp = 'L';
+                setStrokes(inp);
+            }
+
+            if(k==9)
+            {
+                char inp = 'I';
+                setStrokes(inp);
+            }
+            if(k==10)
+            {
+                char inp = 'F';
+                setStrokes(inp);
+            }
+
+            if(k==11)
+            {
+                char inp = 'E';
+                setStrokes(inp);
+            }
+
+          
+
+
+            for(map<string,Game>::iterator it=scoredisp.begin();it!=scoredisp.end();it++)
+            {
+                string current = it->first; //The name of the current object
+                if(scoredisp[current].status==0)
+                {
+                    continue;
+                }
+
+                glm::mat4 MVP;  // MVP = Projection * View * Model
+
+                Matrices.model = glm::mat4(1.0f);
+
+                glm::mat4 ObjectTransform;
+                
+                if(k==0)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                
+                }
+                if(k==1)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-36-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+
+                if(k==2)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-72-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==3)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-130, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==4)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-90, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==5)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-50, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==6)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-10, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
+                    glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+                    ObjectTransform=translateObject*rotateObjectAct;
+                    
+                }
+                if(k==7)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+30, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==8)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-100, scoredisp[current].y+200, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+
+                if(k==9)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-60, scoredisp[current].y+200, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+
+                if(k==10)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-20, scoredisp[current].y+200, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+                if(k==11)
+                {
+                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+20, scoredisp[current].y+200, 0.0f)); // glTranslatef
+                    ObjectTransform=translateObject;
+                }
+
+
+                Matrices.model *= ObjectTransform;
+                MVP = VP * Matrices.model; // MVP = p * V * M
+                
+                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                draw3DObject(scoredisp[current].object);
+                //glPopMatrix (); 
+            }
+        }*/
+
     if(up1==1)
     {
         if(cube["cube1"].y==cube["cube2"].y)
@@ -1175,6 +1246,146 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             fl=0;
         }
     }
+
+    if(down1==1)
+    {
+        float ch1,ch2;
+        ch1=cube["cube1"].y;
+        ch2=cube["cube2"].y;
+        if(ch1==ch2)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].x>cube["cube2"].x)
+            {
+    
+                cube["cube2"].x+=0.4;
+                cube["cube1"].x+=0.2;
+                cube["cube2"].y+=0.2;
+            }
+            else if(cube["cube1"].x<cube["cube2"].x)
+            {
+                cube["cube1"].y+=0.2;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].x+=0.4;
+            }
+            else
+            {
+                cube["cube1"].x+=0.2;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].x=cube["cube2"].x;
+            }
+        }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].x+=0.4;
+                cube["cube2"].x+=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
+
+            }
+            else
+            {
+                cube["cube2"].x+=0.4;
+                cube["cube1"].x+=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_z-=9;
+        cube["cube2"].angle_z-=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            down1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].x=cube["cube2"].x;
+            }
+            fl=0;
+        }
+    }
+    
+    if(right1==1)
+    {
+        if(cube["cube1"].y==cube["cube2"].y)
+        {
+            fl=1;
+        }
+        if(fl==1)
+        {
+            if(cube["cube1"].z>cube["cube2"].z)
+            {
+                cube["cube1"].z-=0.4;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].y+=0.2;
+            }
+            else if(cube["cube1"].z<cube["cube2"].z)
+            {
+                cube["cube2"].y+=0.2;
+                //cube["cube1"].x=cube["cube2"].x;
+                cube["cube2"].z-=0.4;
+                cube["cube1"].z-=0.2;
+            }
+            else
+            {
+                cube["cube1"].z-=0.2;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].z=cube["cube2"].z;
+            }
+        }
+        else
+        {
+            if(cube["cube1"].y>cube["cube2"].y)
+            {
+                cube["cube1"].z-=0.4;
+                cube["cube2"].z-=0.2;
+                cube["cube1"].y-=0.2;
+                //cube["cube1"].y=cube["cube2"].y;
+
+            }
+            else
+            {
+                cube["cube2"].z-=0.4;
+                cube["cube1"].z-=0.2;
+                cube["cube2"].y-=0.2;
+                //cube["cube2"].y=cube["cube1"].y;
+            }
+        }
+        cube["cube1"].angle_x-=9;
+        cube["cube2"].angle_x-=9;
+        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
+        rep++;
+        if(rep==10)
+        {
+            rep=0;
+            right1=0;
+            if(fl==0)
+            {
+                cube["cube1"].y=cube["cube2"].y;
+            }
+            if(fl==1)
+            {
+                cube["cube1"].z=cube["cube2"].z;
+            }
+            fl=0;
+        }
+    }
+
+
+
     if(left1==1)
     {
         if(cube["cube1"].y==cube["cube2"].y)
@@ -1309,44 +1520,35 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             fl=0;
         }
     }
-    /*if(cube["cube1"].y!=cube["cube2"].y)
+
+
+    int k=0,i,j;
+
+    for(i=0;i<10;i++)
     {
-        if(cube["cube1"].y<cube["cube2"].y)
+
+        for(j=0;j<10;j++)
         {
-            if(gamemap[int(cube["cube1"].x/2)+3][int(cube["cube1"].z/2)+3]==2)
+            if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
             {
-                quit(window);
+    
+
+                string c="tile";
+                char d=k_tile+'0';
+                string e=c+d;
+                int ones = gamemap[i][j]%10;
+                int temp_num = gamemap[i][j]/10;
+                int tens = temp_num%10;
+                if(gamemap[tens][ones]==0)
+                {
+                    createtile(e,0,gold,gold,gold,gold,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
+                    gamemap[tens][ones] = 1;
+                    k_tile++;
+                }
             }
         }
-        else
-        {
-            if(gamemap[int(cube["cube2"].x/2)+3][int(cube["cube2"].z/2)+3]==2)
-            {
-                quit(window);
-            }
-        }
-    }*/
-    for(map<string,Game>::iterator it=background.begin();it!=background.end();it++){
-        string current = it->first; //The name of the current object
-        glm::mat4 MVP;  // MVP = Projection * View * Model
-
-        Matrices.model = glm::mat4(1.0f);
-
-        glm::mat4 ObjectTransform;
-        glm::mat4 translateObject = glm::translate (glm::vec3(background[current].x,background[current].y, background[current].z)); 
-        glm::mat4 rotateTriangle = glm::rotate((float)((background[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
-        ObjectTransform=translateObject*rotateTriangle;
-        Matrices.model *= ObjectTransform;
-        //MVP = VP * Matrices.model; // MVP = p * V * M
-        if(doM)
-            MVP = VP * Matrices.model;
-        else
-            MVP = VP;
-        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-        draw3DObject(background[current].object);
-        //glPopMatrix (); 
     }
+
     for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
         string current = it->first; //The name of the current object
         glm::mat4 MVP;  // MVP = Projection * View * Model
@@ -1457,7 +1659,7 @@ void initGL (GLFWwindow* window, int width, int height)
     
 
                 string c="tile";
-                char d=k+'0';
+                char d=k_tile+'0';
                 string e=c+d;
                 if((i+j)%2==0)
                 { 
@@ -1467,23 +1669,44 @@ void initGL (GLFWwindow* window, int width, int height)
                 {
                     createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 }
-                k++;
+                k_tile++;
             }
 
             else if(gamemap[i][j]>2)
             {
                 string c="tile";
-                char d=k+'0';
+                char d=k_tile+'0';
                 string e=c+d;
 
                 createtile(e,0,blue,blue,blue,blue,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
 
-                k++;
-            }        
+                k_tile++;
+            }
+
         }
     }
-    createRectangle("cube1",0,red,red,red,red,12,0.25,-4,2,2,2,"cube",0,0,0);
-    createRectangle("cube2",0,red,red,red,red,12,2.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube1",0,red,red,red,red,12,0.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube2",0,red,red,red,red,12,2.25,-4,2,2,2,"cube",0,0,0);
+
+
+    /*createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0+550,24,8,24,"score");
+    createRectangle("bottom",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24,8,24,"score");
+    createRectangle("middle",10000,chocolate,chocolate,chocolate,chocolate,0+550,0,8,24,"score");
+    createRectangle("left1",10000,chocolate,chocolate,chocolate,chocolate,-24/2+550,24/2,24,8,"score");
+    createRectangle("left2",10000,chocolate,chocolate,chocolate,chocolate,-24/2+550,-24/2,24,8,"score");
+    createRectangle("right1",10000,chocolate,chocolate,chocolate,chocolate,24/2+550,24/2,24,8,"score");
+    createRectangle("right2",10000,chocolate,chocolate,chocolate,chocolate,24/2+550,-24/2,24,8,"score");
+    createRectangle("middle1",10000,chocolate,chocolate,chocolate,chocolate,0+550,24/2,24,8,"score");
+    createRectangle("middle2",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,24,8,"score");
+    createRectangle("diagonal",10000,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,24*sqrt(2),8,"score");
+    
+    createCircle("1",10000,indianred,450+8,132,20,20,1000,"life",1);
+    createCircle("2",10000,indianred,500+8,132,20,20,1000,"life",1);
+    createCircle("3",10000,indianred,550+8,132,20,20,1000,"life",1);*/
+
+
+
+
     reshapeWindow (window, width, height);
 
     // Background color of the scene
