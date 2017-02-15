@@ -112,6 +112,7 @@ struct Sprite {
 typedef struct Sprite Sprite;
 
 map <string, Game> tiles;
+map <string, Game> tiles_2;
 map <string, Game> background;
 map <string, Game> cube;
 map <string, Sprite> scoredisp;
@@ -193,6 +194,7 @@ int level_game = 0;
 
 
 int checkreduction_life(int lives);
+int level_change(int level_game);
 
 
 
@@ -844,6 +846,10 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
     {
         tiles[name]=InstanceGame;
     }
+    if(component=="tile2")
+    {
+        tiles_2[name]=InstanceGame;
+    }
     else if(component=="cube")
     {
         cube[name]=InstanceGame;
@@ -909,6 +915,24 @@ int checkreduction_life(int lives)
 return lives;
 }
 
+int level_change(int level)
+{
+    int i,j;
+    for(i=0;i<10;i++)
+    {
+        for(j=0;j<10;j++)
+        {
+            if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
+            {
+                if(gamemap[i][j]==-10)
+                {
+                    level+=1;
+                }
+            }       
+        }
+    }
+return level;
+}
 
 
 void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, int doP)
@@ -1157,6 +1181,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 fl=0;
 
                 user_life = checkreduction_life(user_life);
+                level_game = level_change(level_game);
 
                 cout << user_life << endl;
                 if(user_life==0)
@@ -1234,6 +1259,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 }
                 fl=0;
                 user_life = checkreduction_life(user_life);
+                level_game = level_change(level_game);
 
                 cout << user_life << endl;
                 if(user_life==0)
@@ -1309,8 +1335,8 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 fl=0;
 
                 user_life = checkreduction_life(user_life);
+                level_game = level_change(level_game);
 
-                cout << user_life << endl;
                 if(user_life==0)
                 {
                     game_over = 1;
@@ -1388,6 +1414,8 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 fl=0;
 
                 
+                user_life = checkreduction_life(user_life);
+                level_game = level_change(level_game);
 
             }
         }
@@ -1423,20 +1451,20 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
                 if(level_game==1)
                 {
-                    if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
+                    if(gamemap1[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
                     {
             
 
                         string c="tile";
                         char d=k_tile+'0';
                         string e=c+d;
-                        int ones = gamemap[i][j]%10;
-                        int temp_num = gamemap[i][j]/10;
+                        int ones = gamemap1[i][j]%10;
+                        int temp_num = gamemap1[i][j]/10;
                         int tens = temp_num%10;
-                        if(gamemap[tens][ones]==0)
+                        if(gamemap1[tens][ones]==0)
                         {
                             createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
-                            gamemap[tens][ones] = 1;
+                            gamemap1[tens][ones] = 1;
                             k_tile++;
                         }
                     }
@@ -1464,29 +1492,55 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 draw3DObject(cube[current].object);
             }
 
+        if(level_game==0)
+        {
+            for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
+                string current = it->first; //The name of the current object
+                glm::mat4 MVP;  // MVP = Projection * View * Model
 
-        for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
-            string current = it->first; //The name of the current object
-            glm::mat4 MVP;  // MVP = Projection * View * Model
+                Matrices.model = glm::mat4(1.0f);
 
-            Matrices.model = glm::mat4(1.0f);
+                glm::mat4 ObjectTransform;
+                glm::mat4 translateObject = glm::translate (glm::vec3(tiles[current].x,tiles[current].y, tiles[current].z)); 
+                glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
+                ObjectTransform=translateObject*rotateTriangle;
+                Matrices.model *= ObjectTransform;
+                //MVP = VP * Matrices.model; // MVP = p * V * M
+                if(doM)
+                    MVP = VP * Matrices.model;
+                else
+                    MVP = VP;
+                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-            glm::mat4 ObjectTransform;
-            glm::mat4 translateObject = glm::translate (glm::vec3(tiles[current].x,tiles[current].y, tiles[current].z)); 
-            glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
-            ObjectTransform=translateObject*rotateTriangle;
-            Matrices.model *= ObjectTransform;
-            //MVP = VP * Matrices.model; // MVP = p * V * M
-            if(doM)
-                MVP = VP * Matrices.model;
-            else
-                MVP = VP;
-            glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+                draw3DObject(tiles[current].object);
+                //glPopMatrix (); 
+            }
 
-            draw3DObject(tiles[current].object);
-            //glPopMatrix (); 
         }
-        
+        if(level_game==1)
+        {
+            for(map<string,Game>::iterator it=tiles_2.begin();it!=tiles_2.end();it++){
+                string current = it->first; //The name of the current object
+                glm::mat4 MVP;  // MVP = Projection * View * Model
+
+                Matrices.model = glm::mat4(1.0f);
+
+                glm::mat4 ObjectTransform;
+                glm::mat4 translateObject = glm::translate (glm::vec3(tiles_2[current].x,tiles_2[current].y, tiles_2[current].z)); 
+                glm::mat4 rotateTriangle = glm::rotate((float)((tiles_2[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
+                ObjectTransform=translateObject*rotateTriangle;
+                Matrices.model *= ObjectTransform;
+                //MVP = VP * Matrices.model; // MVP = p * V * M
+                if(doM)
+                    MVP = VP * Matrices.model;
+                else
+                    MVP = VP;
+                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                draw3DObject(tiles_2[current].object);
+                //glPopMatrix (); 
+            }
+        }
         /*Matrices.model = glm::translate(floor_pos);
         MVP = VP * Matrices.model;
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
@@ -1881,11 +1935,11 @@ void initGL (GLFWwindow* window, int width, int height)
 
          for(j=0;j<10;j++)
          {
-             if(gamemap[i][j]==1)
+             if(gamemap1[i][j]==1)
              {
      
 
-                 string c="tile";
+                 string c="tile2";
                  char d=k_tile+'0';
                  string e=c+d;
                  if((i+j)%2==0)
@@ -1899,27 +1953,27 @@ void initGL (GLFWwindow* window, int width, int height)
                  k_tile++;
              }
 
-             else if(gamemap[i][j]<0 && gamemap[i][j]!=-10)
+             else if(gamemap1[i][j]<0 && gamemap1[i][j]!=-10)
              {
-                 string c="tile";
+                 string c="tile2";
                  char d=k_tile+'0';
                  string e=c+d; 
                  createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                  k_tile++;
              }
 
-             else if(gamemap[i][j]==-10)
+             else if(gamemap1[i][j]==-10)
             {
-                 string c="tile";
+                 string c="tile2";
                  char d=k_tile+'0';
                  string e=c+d; 
                  createtile(e,0,lightgreen,grey,grey,lightgreen,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                  k_tile++;
             }
 
-             else if(gamemap[i][j]>2)
+             else if(gamemap1[i][j]>2)
              {
-                 string c="tile";
+                 string c="tile2";
                  char d=k_tile+'0';
                  string e=c+d;
 
@@ -1928,9 +1982,9 @@ void initGL (GLFWwindow* window, int width, int height)
                  k_tile++;
              }
 
-         }
-     }   
+         }  
     }
+}
 
     createtile("cube1",0,salmon,red,red,salmon,12,0.25,-4,2,2,2,"cube",0,0,0);
     createtile("cube2",0,salmon,red,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
@@ -1976,6 +2030,7 @@ int main (int argc, char** argv)
     int height = 600;
     do_rot = 0;
     floor_rel = 1;
+    int co = 0;
 
     GLFWwindow* window = initGLFW(width, height);
     initGL (window, width, height);
@@ -1996,6 +2051,11 @@ int main (int argc, char** argv)
 	    camera_rotation_angle -= 720;*/
 	last_update_time = current_time;
     flag_score = 1;
+    if(level_game==1 && co==0)
+    {
+        co++;
+        initGL (window, width, height);
+    }
 	draw(window, 0, 0 ,1,0.8,1, 1, 1);
     flag_score = 0;
 	draw(window, 0,0.8, 1, 0.2, 0, 0, 0);
