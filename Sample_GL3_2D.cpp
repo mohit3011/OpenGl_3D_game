@@ -174,6 +174,7 @@ int mouse_click=0,right_mouse_click=0;
 int keyboard_press=0;
 double mouse_pos_x, mouse_pos_y;
 double prev_mouse_pos_x,prev_mouse_pos_y;
+int flag_score=0;
 
 
 int checkreduction_life(int lives);
@@ -645,7 +646,7 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     case 'q':
 	quit(window);
 	break;
-    
+
     case ' ':
 	do_rot ^= 1;
 	break;
@@ -884,6 +885,10 @@ return lives;
 void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, int doP)
 {
 
+    int fbwidth, fbheight;
+    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
+    glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
+
 
     COLOR grey = {165.0/255.0,165.0/255.0,165.0/255.0};
     COLOR dimgrey = {105.0/255.0,105.0/255.0,105.0/255.0};
@@ -922,473 +927,492 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
 
 
-    int fbwidth, fbheight;
-    glfwGetFramebufferSize(window, &fbwidth, &fbheight);
-    glViewport((int)(x*fbwidth), (int)(y*fbheight), (int)(w*fbwidth), (int)(h*fbheight));
-
-
-    // use the loaded shader program
-    // Don't change unless you know what you are doing
-    glUseProgram(programID);
-
-    // Eye - Location of camera. Don't change unless you are sure!!
-    /*camera_radius=1;
-    angle=90;
-    target_x_1=0;
-    target_y_1=0;
-    target_z_1=0;
-    eye_x_1=-4;
-    eye_y_1=12;
-    eye_z_1=-4;*/
-    float temp1,temp2,temp3;
-    temp1= (cube["cube1"].x+cube["cube2"].x)/2;
-    temp3 = (cube["cube1"].z+cube["cube2"].z)/2;
-    temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
-    if(camera_top==1)
+    if(flag_score==1)
     {
-        eye_x_1 = 0+cos(45*M_PI/180);
-        eye_z_1 = 0;
-        //+sin(45*M_PI/180);
-        eye_y_1=20;
+        // use the loaded shader program
+        // Don't change unless you know what you are doing
+        glUseProgram(programID);
+
+        // Eye - Location of camera. Don't change unless you are sure!!
+        /*camera_radius=1;
+        angle=90;
         target_x_1=0;
         target_y_1=0;
         target_z_1=0;
-    }
-    if(camera_tower==1)
-    {
-        eye_x_1 = 15,
-        eye_y_1 = 15;
-        eye_z_1 = 0;
-        target_z_1 = 0;
-        target_y_1 = 0;
-        target_x_1 = 0;    
-    }
-    if(camera_follow==1)
-    {
-        
+        eye_x_1=-4;
+        eye_y_1=12;
+        eye_z_1=-4;*/
+        float temp1,temp2,temp3;
+        temp1= (cube["cube1"].x+cube["cube2"].x)/2;
+        temp3 = (cube["cube1"].z+cube["cube2"].z)/2;
+        temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
+        if(camera_top==1)
+        {
+            eye_x_1 = 0+cos(45*M_PI/180);
+            eye_z_1 = 0;
+            //+sin(45*M_PI/180);
+            eye_y_1=20;
+            target_x_1=0;
+            target_y_1=0;
+            target_z_1=0;
+        }
+        if(camera_tower==1)
+        {
+            eye_x_1 = 15,
+            eye_y_1 = 15;
+            eye_z_1 = 0;
+            target_z_1 = 0;
+            target_y_1 = 0;
+            target_x_1 = 0;    
+        }
+        if(camera_follow==1)
+        {
+            
+                eye_x_1 = temp1;
+                eye_y_1 = temp2;
+                eye_z_1 = temp3-5;
+                target_x_1 = temp1;
+                target_y_1 = temp2;
+                target_z_1 = 1000;
+        }
+        if(camera_self==1)
+        {
+            
             eye_x_1 = temp1;
             eye_y_1 = temp2;
-            eye_z_1 = temp3-5;
+            eye_z_1 = temp3+3;
             target_x_1 = temp1;
             target_y_1 = temp2;
             target_z_1 = 1000;
-    }
-    if(camera_self==1)
-    {
-        
-        eye_x_1 = temp1;
-        eye_y_1 = temp2;
-        eye_z_1 = temp3+3;
-        target_x_1 = temp1;
-        target_y_1 = temp2;
-        target_z_1 = 1000;
-    }
-    glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-    if(camera_helicopter==1)
-    {
-        if(mouse_click==1)
-        {
-            angle=(mouse_pos_x)*360/600;
-            eye_x_1 = 20*cos(angle*M_PI/180);
-            eye_z_1 = 20*sin(angle*M_PI/180);
-            target_x_1 = 0;
-            target_z_1 = 0;
-            target_y_1 = 0;
         }
-        if(right_mouse_click==1)
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        if(camera_helicopter==1)
         {
-            angle = 90-(mouse_pos_y)*90/600;
-            eye_y_1 = 20*sin(angle*M_PI/180);
-            target_x_1 = 0;
-            target_z_1 = 0;
-            target_y_1 = 0;
-        }
-    }
-    prev_mouse_pos_x = mouse_pos_x;
-    prev_mouse_pos_y = mouse_pos_y;
-    if(camera_self==0 && camera_follow==0)
-    {
-        orient_forward=1;
-        orient_right=0;
-        orient_left=0;
-        orient_backward=0;
-    }
-    glm::vec3 eye(eye_x_1,eye_y_1,eye_z_1);
-    //glm::vec3 eye ( 8*sin(camera_rotation_angle*M_PI/180.0f), 3, 8*sin(camera_rotation_angle*M_PI/180.0f) );
-    // Target - Where is the camera looking at.  Don't change unless you are sure!!
-    glm::vec3 target (target_x_1,target_y_1,target_z_1);
-    // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
-    glm::vec3 up (0, 1, 0);
-
-    // Compute Camera matrix (view)
-    if(doV)
-	Matrices.view = glm::lookAt(eye, target, up); // Fixed camera for 2D (ortho) in XY plane
-    else
-	Matrices.view = glm::mat4(1.0f);
-
-    // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
-    glm::mat4 VP;
-    if (doP)
-	VP = Matrices.projection * Matrices.view;
-    else
-	VP = Matrices.view;
-
-    // Send our transformation to the currently bound shader, in the "MVP" uniform
-    // For each model you render, since the MVP will be different (at least the M part)
-    glm::mat4 MVP;	// MVP = Projection * View * Model
-
-    // Load identity to model matrix
-    Matrices.model = glm::mat4(1.0f);
-
-
-
-    if(game_over==1)
-    {
-        quit(window);
-    }
-
-
-
-
-    if(up1==1)
-    {
-        if(cube["cube1"].y==cube["cube2"].y)
-        {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].x>cube["cube2"].x)
+            if(mouse_click==1)
             {
-                //cube["cube2"].y=2.5;
-                //cube["cube2"].x=cube["cube1"].x;
-                cube["cube2"].x-=0.2;
-                cube["cube1"].x-=0.4;
-                cube["cube1"].y+=0.2;
+                angle=(mouse_pos_x)*360/600;
+                eye_x_1 = 20*cos(angle*M_PI/180);
+                eye_z_1 = 20*sin(angle*M_PI/180);
+                target_x_1 = 0;
+                target_z_1 = 0;
+                target_y_1 = 0;
             }
-            else if(cube["cube1"].x<cube["cube2"].x)
+            if(right_mouse_click==1)
             {
-                cube["cube2"].y+=0.2;
-                //cube["cube1"].x=cube["cube2"].x;
-                cube["cube1"].x-=0.2;
-                cube["cube2"].x-=0.4;
-            }
-            else
-            {
-                cube["cube1"].x-=0.2;
-                cube["cube2"].x-=0.2;
-                cube["cube1"].x=cube["cube2"].x;
+                angle = 90-(mouse_pos_y)*90/600;
+                eye_y_1 = 20*sin(angle*M_PI/180);
+                target_x_1 = 0;
+                target_z_1 = 0;
+                target_y_1 = 0;
             }
         }
+        prev_mouse_pos_x = mouse_pos_x;
+        prev_mouse_pos_y = mouse_pos_y;
+        if(camera_self==0 && camera_follow==0)
+        {
+            orient_forward=1;
+            orient_right=0;
+            orient_left=0;
+            orient_backward=0;
+        }
+        glm::vec3 eye(eye_x_1,eye_y_1,eye_z_1);
+        //glm::vec3 eye ( 8*sin(camera_rotation_angle*M_PI/180.0f), 3, 8*sin(camera_rotation_angle*M_PI/180.0f) );
+        // Target - Where is the camera looking at.  Don't change unless you are sure!!
+        glm::vec3 target (target_x_1,target_y_1,target_z_1);
+        // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
+        glm::vec3 up (0, 1, 0);
+
+        // Compute Camera matrix (view)
+        if(doV)
+    	Matrices.view = glm::lookAt(eye, target, up); // Fixed camera for 2D (ortho) in XY plane
         else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].x-=0.4;
-                cube["cube2"].x-=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
+    	Matrices.view = glm::mat4(1.0f);
 
-            }
-            else
-            {
-                cube["cube2"].x-=0.4;
-                cube["cube1"].x-=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
-            }
-        }
-        cube["cube1"].angle_z+=9;
-        cube["cube2"].angle_z+=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
+        // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
+        glm::mat4 VP;
+        if (doP)
+    	VP = Matrices.projection * Matrices.view;
+        else
+    	VP = Matrices.view;
+
+        // Send our transformation to the currently bound shader, in the "MVP" uniform
+        // For each model you render, since the MVP will be different (at least the M part)
+        glm::mat4 MVP;	// MVP = Projection * View * Model
+
+        // Load identity to model matrix
+        Matrices.model = glm::mat4(1.0f);
+
+
+
+        if(game_over==1)
         {
-            rep=0;
-            up1=0;
-            if(fl==0)
+            quit(window);
+        }
+
+
+
+
+        if(up1==1)
+        {
+            if(cube["cube1"].y==cube["cube2"].y)
             {
-                cube["cube1"].y=cube["cube2"].y;
+                fl=1;
             }
             if(fl==1)
             {
-                cube["cube1"].x=cube["cube2"].x;
-            }
-            fl=0;
-
-            user_life = checkreduction_life(user_life);
-
-            cout << user_life << endl;
-            if(user_life==0)
-            {
-                game_over = 1;
-            }
-        }
-    }
-
-    if(down1==1)
-    {
-        float ch1,ch2;
-        ch1=cube["cube1"].y;
-        ch2=cube["cube2"].y;
-        if(ch1==ch2)
-        {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].x>cube["cube2"].x)
-            {
-    
-                cube["cube2"].x+=0.4;
-                cube["cube1"].x+=0.2;
-                cube["cube2"].y+=0.2;
-            }
-            else if(cube["cube1"].x<cube["cube2"].x)
-            {
-                cube["cube1"].y+=0.2;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].x+=0.4;
-            }
-            else
-            {
-                cube["cube1"].x+=0.2;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].x=cube["cube2"].x;
-            }
-        }
-        else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].x+=0.4;
-                cube["cube2"].x+=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
-
-            }
-            else
-            {
-                cube["cube2"].x+=0.4;
-                cube["cube1"].x+=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
-            }
-        }
-        cube["cube1"].angle_z-=9;
-        cube["cube2"].angle_z-=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
-        {
-            rep=0;
-            down1=0;
-            if(fl==0)
-            {
-                cube["cube1"].y=cube["cube2"].y;
-            }
-            if(fl==1)
-            {
-                cube["cube1"].x=cube["cube2"].x;
-            }
-            fl=0;
-            user_life = checkreduction_life(user_life);
-
-            cout << user_life << endl;
-            if(user_life==0)
-            {
-                game_over = 1;
-            }
-        }
-    }
-    
-    if(right1==1)
-    {
-        if(cube["cube1"].y==cube["cube2"].y)
-        {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].z>cube["cube2"].z)
-            {
-                cube["cube1"].z-=0.4;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].y+=0.2;
-            }
-            else if(cube["cube1"].z<cube["cube2"].z)
-            {
-                cube["cube2"].y+=0.2;
-                //cube["cube1"].x=cube["cube2"].x;
-                cube["cube2"].z-=0.4;
-                cube["cube1"].z-=0.2;
-            }
-            else
-            {
-                cube["cube1"].z-=0.2;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].z=cube["cube2"].z;
-            }
-        }
-        else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].z-=0.4;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
-
-            }
-            else
-            {
-                cube["cube2"].z-=0.4;
-                cube["cube1"].z-=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
-            }
-        }
-        cube["cube1"].angle_x-=9;
-        cube["cube2"].angle_x-=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
-        {
-            rep=0;
-            right1=0;
-            if(fl==0)
-            {
-                cube["cube1"].y=cube["cube2"].y;
-            }
-            if(fl==1)
-            {
-                cube["cube1"].z=cube["cube2"].z;
-            }
-            fl=0;
-
-            user_life = checkreduction_life(user_life);
-
-            cout << user_life << endl;
-            if(user_life==0)
-            {
-                game_over = 1;
-            }
-        }
-    }
-
-
-
-    if(left1==1)
-    {
-        if(cube["cube1"].y==cube["cube2"].y)
-        {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].z>cube["cube2"].z)
-            {
-                //cube["cube2"].y=2.5;
-                //cube["cube2"].x=cube["cube1"].x;
-                cube["cube2"].z+=0.4;
-                cube["cube1"].z+=0.2;
-                cube["cube2"].y+=0.2;
-            }
-            else if(cube["cube1"].z<cube["cube2"].z)
-            {
-                cube["cube1"].y+=0.2;
-                //cube["cube1"].x=cube["cube2"].x;
-                cube["cube1"].z+=0.4;
-                cube["cube2"].z+=0.2;
-            }
-            else
-            {
-                cube["cube1"].z+=0.2;
-                cube["cube2"].z+=0.2;
-                cube["cube1"].z=cube["cube2"].z;
-            }
-        }
-        else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].z+=0.4;
-                cube["cube2"].z+=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
-
-            }
-            else
-            {
-                cube["cube2"].z+=0.4;
-                cube["cube1"].z+=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
-            }
-        }
-        cube["cube1"].angle_x+=9;
-        cube["cube2"].angle_x+=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
-        {
-            rep=0;
-            left1=0;
-            if(fl==0)
-            {
-                cube["cube1"].y=cube["cube2"].y;
-            }
-            if(fl==1)
-            {
-                cube["cube1"].z=cube["cube2"].z;
-            }
-            fl=0;
-
-            
-
-        }
-    }
-    
-
-    int k=0,i,j;
-
-    for(i=0;i<10;i++)
-    {
-
-        for(j=0;j<10;j++)
-        {
-            if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
-            {
-    
-
-                string c="tile";
-                char d=k_tile+'0';
-                string e=c+d;
-                int ones = gamemap[i][j]%10;
-                int temp_num = gamemap[i][j]/10;
-                int tens = temp_num%10;
-                if(gamemap[tens][ones]==0)
+                if(cube["cube1"].x>cube["cube2"].x)
                 {
-                    createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
-                    gamemap[tens][ones] = 1;
-                    k_tile++;
+                    //cube["cube2"].y=2.5;
+                    //cube["cube2"].x=cube["cube1"].x;
+                    cube["cube2"].x-=0.2;
+                    cube["cube1"].x-=0.4;
+                    cube["cube1"].y+=0.2;
+                }
+                else if(cube["cube1"].x<cube["cube2"].x)
+                {
+                    cube["cube2"].y+=0.2;
+                    //cube["cube1"].x=cube["cube2"].x;
+                    cube["cube1"].x-=0.2;
+                    cube["cube2"].x-=0.4;
+                }
+                else
+                {
+                    cube["cube1"].x-=0.2;
+                    cube["cube2"].x-=0.2;
+                    cube["cube1"].x=cube["cube2"].x;
+                }
+            }
+            else
+            {
+                if(cube["cube1"].y>cube["cube2"].y)
+                {
+                    cube["cube1"].x-=0.4;
+                    cube["cube2"].x-=0.2;
+                    cube["cube1"].y-=0.2;
+                    //cube["cube1"].y=cube["cube2"].y;
+
+                }
+                else
+                {
+                    cube["cube2"].x-=0.4;
+                    cube["cube1"].x-=0.2;
+                    cube["cube2"].y-=0.2;
+                    //cube["cube2"].y=cube["cube1"].y;
+                }
+            }
+            cube["cube1"].angle_z+=9;
+            cube["cube2"].angle_z+=9;
+            rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
+            //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+            rep++;
+            if(rep==10)
+            {
+                rep=0;
+                up1=0;
+                if(fl==0)
+                {
+                    cube["cube1"].y=cube["cube2"].y;
+                }
+                if(fl==1)
+                {
+                    cube["cube1"].x=cube["cube2"].x;
+                }
+                fl=0;
+
+                user_life = checkreduction_life(user_life);
+
+                cout << user_life << endl;
+                if(user_life==0)
+                {
+                    game_over = 1;
                 }
             }
         }
-    }
+
+        if(down1==1)
+        {
+            float ch1,ch2;
+            ch1=cube["cube1"].y;
+            ch2=cube["cube2"].y;
+            if(ch1==ch2)
+            {
+                fl=1;
+            }
+            if(fl==1)
+            {
+                if(cube["cube1"].x>cube["cube2"].x)
+                {
+        
+                    cube["cube2"].x+=0.4;
+                    cube["cube1"].x+=0.2;
+                    cube["cube2"].y+=0.2;
+                }
+                else if(cube["cube1"].x<cube["cube2"].x)
+                {
+                    cube["cube1"].y+=0.2;
+                    cube["cube2"].x+=0.2;
+                    cube["cube1"].x+=0.4;
+                }
+                else
+                {
+                    cube["cube1"].x+=0.2;
+                    cube["cube2"].x+=0.2;
+                    cube["cube1"].x=cube["cube2"].x;
+                }
+            }
+            else
+            {
+                if(cube["cube1"].y>cube["cube2"].y)
+                {
+                    cube["cube1"].x+=0.4;
+                    cube["cube2"].x+=0.2;
+                    cube["cube1"].y-=0.2;
+                    //cube["cube1"].y=cube["cube2"].y;
+
+                }
+                else
+                {
+                    cube["cube2"].x+=0.4;
+                    cube["cube1"].x+=0.2;
+                    cube["cube2"].y-=0.2;
+                    //cube["cube2"].y=cube["cube1"].y;
+                }
+            }
+            cube["cube1"].angle_z-=9;
+            cube["cube2"].angle_z-=9;
+            rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
+            //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+            rep++;
+            if(rep==10)
+            {
+                rep=0;
+                down1=0;
+                if(fl==0)
+                {
+                    cube["cube1"].y=cube["cube2"].y;
+                }
+                if(fl==1)
+                {
+                    cube["cube1"].x=cube["cube2"].x;
+                }
+                fl=0;
+                user_life = checkreduction_life(user_life);
+
+                cout << user_life << endl;
+                if(user_life==0)
+                {
+                    game_over = 1;
+                }
+            }
+        }
+        
+        if(right1==1)
+        {
+            if(cube["cube1"].y==cube["cube2"].y)
+            {
+                fl=1;
+            }
+            if(fl==1)
+            {
+                if(cube["cube1"].z>cube["cube2"].z)
+                {
+                    cube["cube1"].z-=0.4;
+                    cube["cube2"].z-=0.2;
+                    cube["cube1"].y+=0.2;
+                }
+                else if(cube["cube1"].z<cube["cube2"].z)
+                {
+                    cube["cube2"].y+=0.2;
+                    //cube["cube1"].x=cube["cube2"].x;
+                    cube["cube2"].z-=0.4;
+                    cube["cube1"].z-=0.2;
+                }
+                else
+                {
+                    cube["cube1"].z-=0.2;
+                    cube["cube2"].z-=0.2;
+                    cube["cube1"].z=cube["cube2"].z;
+                }
+            }
+            else
+            {
+                if(cube["cube1"].y>cube["cube2"].y)
+                {
+                    cube["cube1"].z-=0.4;
+                    cube["cube2"].z-=0.2;
+                    cube["cube1"].y-=0.2;
+                    //cube["cube1"].y=cube["cube2"].y;
+
+                }
+                else
+                {
+                    cube["cube2"].z-=0.4;
+                    cube["cube1"].z-=0.2;
+                    cube["cube2"].y-=0.2;
+                    //cube["cube2"].y=cube["cube1"].y;
+                }
+            }
+            cube["cube1"].angle_x-=9;
+            cube["cube2"].angle_x-=9;
+            rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+            //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
+            rep++;
+            if(rep==10)
+            {
+                rep=0;
+                right1=0;
+                if(fl==0)
+                {
+                    cube["cube1"].y=cube["cube2"].y;
+                }
+                if(fl==1)
+                {
+                    cube["cube1"].z=cube["cube2"].z;
+                }
+                fl=0;
+
+                user_life = checkreduction_life(user_life);
+
+                cout << user_life << endl;
+                if(user_life==0)
+                {
+                    game_over = 1;
+                }
+            }
+        }
 
 
-    for(map<string,Game>::iterator it=cube.begin();it!=cube.end();it++){
+
+        if(left1==1)
+        {
+            if(cube["cube1"].y==cube["cube2"].y)
+            {
+                fl=1;
+            }
+            if(fl==1)
+            {
+                if(cube["cube1"].z>cube["cube2"].z)
+                {
+                    //cube["cube2"].y=2.5;
+                    //cube["cube2"].x=cube["cube1"].x;
+                    cube["cube2"].z+=0.4;
+                    cube["cube1"].z+=0.2;
+                    cube["cube2"].y+=0.2;
+                }
+                else if(cube["cube1"].z<cube["cube2"].z)
+                {
+                    cube["cube1"].y+=0.2;
+                    //cube["cube1"].x=cube["cube2"].x;
+                    cube["cube1"].z+=0.4;
+                    cube["cube2"].z+=0.2;
+                }
+                else
+                {
+                    cube["cube1"].z+=0.2;
+                    cube["cube2"].z+=0.2;
+                    cube["cube1"].z=cube["cube2"].z;
+                }
+            }
+            else
+            {
+                if(cube["cube1"].y>cube["cube2"].y)
+                {
+                    cube["cube1"].z+=0.4;
+                    cube["cube2"].z+=0.2;
+                    cube["cube1"].y-=0.2;
+                    //cube["cube1"].y=cube["cube2"].y;
+
+                }
+                else
+                {
+                    cube["cube2"].z+=0.4;
+                    cube["cube1"].z+=0.2;
+                    cube["cube2"].y-=0.2;
+                    //cube["cube2"].y=cube["cube1"].y;
+                }
+            }
+            cube["cube1"].angle_x+=9;
+            cube["cube2"].angle_x+=9;
+            rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
+            //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
+            rep++;
+            if(rep==10)
+            {
+                rep=0;
+                left1=0;
+                if(fl==0)
+                {
+                    cube["cube1"].y=cube["cube2"].y;
+                }
+                if(fl==1)
+                {
+                    cube["cube1"].z=cube["cube2"].z;
+                }
+                fl=0;
+
+                
+
+            }
+        }
+        
+
+        int k=0,i,j;
+
+        for(i=0;i<10;i++)
+        {
+
+            for(j=0;j<10;j++)
+            {
+                if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
+                {
+        
+
+                    string c="tile";
+                    char d=k_tile+'0';
+                    string e=c+d;
+                    int ones = gamemap[i][j]%10;
+                    int temp_num = gamemap[i][j]/10;
+                    int tens = temp_num%10;
+                    if(gamemap[tens][ones]==0)
+                    {
+                        createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
+                        gamemap[tens][ones] = 1;
+                        k_tile++;
+                    }
+                }
+            }
+        }
+
+
+        for(map<string,Game>::iterator it=cube.begin();it!=cube.end();it++){
+                string current = it->first; //The name of the current object
+                glm::mat4 MVP;  // MVP = Projection * View * Model
+                Matrices.model = glm::mat4(1.0f);
+                glm::mat4 ObjectTransform;
+                glm::mat4 translateObject = glm::translate (glm::vec3(cube[current].x,cube[current].y, cube[current].z));
+                ObjectTransform=translateObject*rotateTriangle1;
+                Matrices.model *= ObjectTransform;
+                //MVP = VP * Matrices.model; // MVP = p * V * M
+                if(doM)
+                    MVP = VP * Matrices.model;
+                else
+                    MVP = VP;
+                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                draw3DObject(cube[current].object);
+            }
+
+
+        for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
             string current = it->first; //The name of the current object
             glm::mat4 MVP;  // MVP = Projection * View * Model
+
             Matrices.model = glm::mat4(1.0f);
+
             glm::mat4 ObjectTransform;
-            glm::mat4 translateObject = glm::translate (glm::vec3(cube[current].x,cube[current].y, cube[current].z));
-            ObjectTransform=translateObject*rotateTriangle1;
+            glm::mat4 translateObject = glm::translate (glm::vec3(tiles[current].x,tiles[current].y, tiles[current].z)); 
+            glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
+            ObjectTransform=translateObject*rotateTriangle;
             Matrices.model *= ObjectTransform;
             //MVP = VP * Matrices.model; // MVP = p * V * M
             if(doM)
@@ -1397,39 +1421,259 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 MVP = VP;
             glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-            draw3DObject(cube[current].object);
+            draw3DObject(tiles[current].object);
+            //glPopMatrix (); 
         }
-
-
-    for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
-        string current = it->first; //The name of the current object
-        glm::mat4 MVP;  // MVP = Projection * View * Model
-
-        Matrices.model = glm::mat4(1.0f);
-
-        glm::mat4 ObjectTransform;
-        glm::mat4 translateObject = glm::translate (glm::vec3(tiles[current].x,tiles[current].y, tiles[current].z)); 
-        glm::mat4 rotateTriangle = glm::rotate((float)((tiles[current].angle_x)*M_PI/180.0f), glm::vec3(0,0,1));// glTranslatef
-        ObjectTransform=translateObject*rotateTriangle;
-        Matrices.model *= ObjectTransform;
-        //MVP = VP * Matrices.model; // MVP = p * V * M
-        if(doM)
-            MVP = VP * Matrices.model;
-        else
-            MVP = VP;
+        
+        /*Matrices.model = glm::translate(floor_pos);
+        MVP = VP * Matrices.model;
         glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-        draw3DObject(tiles[current].object);
-        //glPopMatrix (); 
+        // draw3DObject draws the VAO given to it using current MVP matrix
+        draw3DObject(floor_vao);*/
     }
+
+    else
+    {
+
+        // clear the color and depth in the frame buffer
+        glm::vec3 eye(0+cos(M_PI/4),0,20);
+
+        // use the loaded shader program
+        // Don't change unless you know what you are doing
+        glUseProgram (programID);
+
+        // Eye - Location of camera. Don't change unless you are sure!!
+        
+        // Target - Where is the camera looking at.  Don't change unless you are sure!!
+        glm::vec3 target (0, 0, 0);
+        // Up - Up vector defines tilt of camera.  Don't change unless you are sure!!
+        glm::vec3 up (0, 1, 0);
+
+        // Compute Camera matrix (view)
+        // Matrices.view = glm::lookAt( eye, target, up ); // Rotating Camera for 3D
+        //  Don't change unless you are sure!!
+        Matrices.view = glm::lookAt(eye,target,up); // Fixed camera for 2D (ortho) in XY plane
+
+        // Compute ViewProject matrix as view/camera might not be changed for this frame (basic scenario)
+        //  Don't change unless you are sure!!
+        glm::mat4 VP = Matrices.projection * Matrices.view;
+
+        // Send our transformation to the currently bound shader, in the "MVP" uniform
+        // For each model you render, since the MVP will be different (at least the M part)
+        //  Don't change unless you are sure!!
+        glm::mat4 MVP;  // MVP = Projection * View * Model
+
     
-    /*Matrices.model = glm::translate(floor_pos);
-    MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
-    // draw3DObject draws the VAO given to it using current MVP matrix
-    draw3DObject(floor_vao);*/
 
+
+          
+
+          /*int cn = 1;
+          for(map<string,Sprite>::iterator it=life.begin();it!=life.end();it++){
+              string current = it->first; //The name of the current object
+              if(life[current].status==0)
+                  continue;
+              if(user_life>= cn)
+              {
+                  glm::mat4 MVP;  // MVP = Projection * View * Model
+
+                  Matrices.model = glm::mat4(1.0f);
+
+                  glm::mat4 ObjectTransform;
+                  
+                  glm::mat4 translateObject = glm::translate (glm::vec3(life[current].x, life[current].y, 0.0f)); // glTranslatef
+                  ObjectTransform=translateObject;
+                  Matrices.model *= ObjectTransform;
+                  MVP = VP * Matrices.model; // MVP = p * V * M
+                  
+                  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                  draw3DObject(life[current].object);
+                  cn++;
+              }//glPopMatrix (); 
+          }*/
+
+        
+          
+
+          string scored = "score";
+          int ps_score = user_score;
+          int ones = ps_score%10;
+          ps_score = ps_score/10;
+          int tenth = ps_score%10;
+          ps_score = ps_score/10;
+          int hundreth = ps_score%10;
+          int k;
+          for(k=0;k<=11;k++)
+          {
+              if(k==0)
+              {
+                  char inp = ones + '0';
+                  setStrokes(inp);
+              }
+
+              if(k==1)
+              {
+                  char inp = tenth + '0';
+                  setStrokes(inp);
+              }
+
+              if(k==2)
+              {
+                  char inp = hundreth + '0';
+                  setStrokes(inp);
+              }
+
+              if(k==3)
+              {
+                  char inp = 'S';
+                  setStrokes(inp);
+              }
+
+              if(k==4)
+              {
+                  char inp = 'C';
+                  setStrokes(inp);
+              }
+
+              if(k==5)
+              {
+                  char inp = 'O';
+                  setStrokes(inp);
+              }
+
+              if(k==6)
+              {
+                  char inp = 'R';
+                  setStrokes(inp);
+              }
+              if(k==7)
+              {
+                  char inp = 'E';
+                  setStrokes(inp);
+              }
+              if(k==8)
+              {
+                  char inp = 'L';
+                  setStrokes(inp);
+              }
+
+              if(k==9)
+              {
+                  char inp = 'I';
+                  setStrokes(inp);
+              }
+              if(k==10)
+              {
+                  char inp = 'F';
+                  setStrokes(inp);
+              }
+
+              if(k==11)
+              {
+                  char inp = 'E';
+                  setStrokes(inp);
+              }
+
+            
+
+
+              for(map<string,Sprite>::iterator it=scoredisp.begin();it!=scoredisp.end();it++)
+              {
+                  string current = it->first; //The name of the current object
+                  if(scoredisp[current].status==0)
+                  {
+                      continue;
+                  }
+                  cout << current << endl;
+
+                  glm::mat4 MVP;  // MVP = Projection * View * Model
+
+                  Matrices.model = glm::mat4(1.0f);
+
+                  glm::mat4 ObjectTransform;
+                  
+                  if(k==0)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.15, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  
+                  }
+                  if(k==1)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.51, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+
+                  if(k==2)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.87, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==3)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.13, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==4)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.9, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==5)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.5, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==6)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.1, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
+                      ObjectTransform=translateObject*rotateObjectAct;
+                      
+                  }
+                  if(k==7)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+0.3, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==8)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.1, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+
+                  if(k==9)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.6, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+
+                  if(k==10)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.2, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+                  if(k==11)
+                  {
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+0.2, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      ObjectTransform=translateObject;
+                  }
+
+
+                  Matrices.model *= ObjectTransform;
+                  MVP = VP * Matrices.model; // MVP = p * V * M
+                  
+                  glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                  draw3DObject(scoredisp[current].object);
+                  //glPopMatrix (); 
+              }
+          }  
+          
+    }
 }
 
 /* Initialise glfw window, I/O callbacks and the renderer to use */
@@ -1534,6 +1778,18 @@ void initGL (GLFWwindow* window, int width, int height)
     createtile("cube2",0,salmon,salmon,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
 
 
+    createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0,0,100,100,"score");
+    createRectangle("bottom",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("middle",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("left1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("left2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("right1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("right2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("middle1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("middle2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
+    createRectangle("diagonal",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1*sqrt(2),0.1,"score");
+    
+
 
 
 
@@ -1541,7 +1797,7 @@ void initGL (GLFWwindow* window, int width, int height)
     reshapeWindow (window, width, height);
 
     // Background color of the scene
-    glClearColor (0.3f, 0.3f, 0.3f, 0.0f); // R, G, B, A
+    glClearColor (1.0f, 1.0f, 1.0f, 0.0f); // R, G, B, A
     glClearDepth (1.0f);
 
     glEnable (GL_DEPTH_TEST);
@@ -1578,8 +1834,10 @@ int main (int argc, char** argv)
 	if(camera_rotation_angle > 720)
 	    camera_rotation_angle -= 720;*/
 	last_update_time = current_time;
-	draw(window, 0, 0 ,1,1,1, 1, 1);
-	//draw(window, 0.5,0, 0.5, 1, 0, 1, 1);
+    flag_score = 1;
+	draw(window, 0, 0 ,1,0.8,1, 1, 1);
+    flag_score = 0;
+	draw(window, 0,0.8, 1, 0.2, 0, 0, 0);
 	//draw(window, 0, 0.5, 0.5, 0.5, 1, 0, 1);
 	//draw(window, 0.5, 0.5, 0.5, 0.5, 0, 0, 1);
 
