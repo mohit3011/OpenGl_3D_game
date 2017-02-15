@@ -1497,6 +1497,30 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
         
           
+          int cn = 1;
+        for(map<string,Sprite>::iterator it=life.begin();it!=life.end();it++){
+            string current = it->first; //The name of the current object
+            if(life[current].status==0)
+                continue;
+            if(user_life>= cn)
+            {
+                glm::mat4 MVP;  // MVP = Projection * View * Model
+
+                Matrices.model = glm::mat4(1.0f);
+
+                glm::mat4 ObjectTransform;
+                
+                glm::mat4 translateObject = glm::translate (glm::vec3(life[current].x, life[current].y, 0.0f)); // glTranslatef
+                ObjectTransform=translateObject;
+                Matrices.model *= ObjectTransform;
+                MVP = VP * Matrices.model; // MVP = p * V * M
+                
+                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+                draw3DObject(life[current].object);
+                cn++;
+            }//glPopMatrix (); 
+        }
 
           string scored = "score";
           int ps_score = user_score;
@@ -1506,7 +1530,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
           ps_score = ps_score/10;
           int hundreth = ps_score%10;
           int k;
-          for(k=0;k<=11;k++)
+          for(k=0;k<12;k++)
           {
               if(k==0)
               {
@@ -1587,7 +1611,6 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                   {
                       continue;
                   }
-                  cout << current << endl;
 
                   glm::mat4 MVP;  // MVP = Projection * View * Model
 
@@ -1597,68 +1620,68 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                   
                   if(k==0)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.15, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+16, scoredisp[current].y, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   
                   }
                   if(k==1)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.51, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+12, scoredisp[current].y, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
 
                   if(k==2)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.87, scoredisp[current].y-0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+8, scoredisp[current].y, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==3)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.13, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+4, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==4)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.9, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+7.5, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==5)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.5, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+11, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==6)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.1, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+14.5, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
                       ObjectTransform=translateObject*rotateObjectAct;
                       
                   }
                   if(k==7)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+0.3, scoredisp[current].y+0.15, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+18, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==8)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.1, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-14.5, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
 
                   if(k==9)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.6, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-11, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
 
                   if(k==10)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-0.2, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-7.5, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
                   if(k==11)
                   {
-                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+0.2, scoredisp[current].y+0.2, 0.0f)); // glTranslatef
+                      glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-4, scoredisp[current].y+10, 0.0f)); // glTranslatef
                       ObjectTransform=translateObject;
                   }
 
@@ -1778,17 +1801,20 @@ void initGL (GLFWwindow* window, int width, int height)
     createtile("cube2",0,salmon,salmon,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
 
 
-    createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0,0,100,100,"score");
-    createRectangle("bottom",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("middle",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("left1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("left2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("right1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("right2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("middle1",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("middle2",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1,0.1,"score");
-    createRectangle("diagonal",10000,chocolate,chocolate,chocolate,chocolate,0,0,0.1*sqrt(2),0.1,"score");
+    createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0,24/8,8/8,24/8,"score");
+    createRectangle("bottom",10000,chocolate,chocolate,chocolate,chocolate,0,-24/8,8/8,24/8,"score");
+    createRectangle("middle",10000,chocolate,chocolate,chocolate,chocolate,0,0,8/8,24/8,"score");
+    createRectangle("left1",10000,chocolate,chocolate,chocolate,chocolate,-24/16,24/16,24/8,8/8,"score");
+    createRectangle("left2",10000,chocolate,chocolate,chocolate,chocolate,-24/16,-24/16,24/8,8/8,"score");
+    createRectangle("right1",10000,chocolate,chocolate,chocolate,chocolate,24/16,24/16,24/8,8/8,"score");
+    createRectangle("right2",10000,chocolate,chocolate,chocolate,chocolate,24/16,-24/16,24/8,8/8,"score");
+    createRectangle("middle1",10000,chocolate,chocolate,chocolate,chocolate,0,24/16,24/8,8/8,"score");
+    createRectangle("middle2",10000,chocolate,chocolate,chocolate,chocolate,0,-24/16,24/8,8/8,"score");
+    createRectangle("diagonal",10000,chocolate,chocolate,chocolate,chocolate,0,-24/16,24*sqrt(2)/8,8/8,"score");
     
+    createCircle("1",10000,indianred,-13,-3,1.6,5,1000,"life",1);
+    createCircle("2",10000,indianred,-9,-3,1.6,5,1000,"life",1);
+    createCircle("3",10000,indianred,-5,-3,1.6,5,1000,"life",1);
 
 
 
