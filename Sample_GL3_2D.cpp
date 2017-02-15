@@ -130,6 +130,20 @@ int gamemap[10][10]={
     {0,0,0,1,1,1,1,1,0,0},
     {0,0,1,1,1,1,0,0,0,0}
 };
+
+int gamemap1[10][10]={
+    {1,1,1,1,25,0,1,1,0,0},
+    {0,0,-1,0,-1,1,1,1,0,0},
+    {1,0,0,1,1,0,0,0,-1,0},
+    {1,0,1,0,27,0,-1,0,1,0},
+    {0,0,0,1,1,0,0,0,1,0},
+    {0,0,1,1,1,0,0,0,0,0},      // 0 means gap , 1 means normal tile , 2 means bridge , 3 mean lever
+    {0,0,0,1,1,1,1,0,0,0},
+    {0,0,0,0,0,1,1,0,0,0},
+    {0,0,0,1,1,1,1,1,0,0},
+    {0,0,1,1,1,1,0,0,0,0}
+};
+
 struct GLMatrices {
     glm::mat4 projection;
     glm::mat4 model;
@@ -154,27 +168,28 @@ int k_tile=0;
 int game_over=0;
 
 float eye_x_1,eye_y_1,eye_z_1;
-float target_x_1,target_y_1,target_z_1;
-int camera_follow=0;
-int camera_follow_adjust_1=0;
-int camera_top=0;
-int camera_fps=0;
-float camera_radius;
-float camera_fov=1.3;
-float fps_head_offset=0;
-float fps_head_offset_x=0;
-int camera_tower=1;
-int camera_helicopter=0;
+int camera_parachute=0;
 int camera_self=0;
 int orient_right=0;
 int orient_left=0;
 int orient_forward=0;
 int orient_backward=0;
+float target_x_1,target_y_1,target_z_1;
+int follow_cube_cam=0;
+int follow_cube_cam_adjust_1=0;
+int top_cam=0;
+int camera_fps=0;
+float camera_radius;
+float camera_fov=1.3;
+float fps_head_offset=0;
+float fps_head_offset_x=0;
+int cam_tower=1;
 int mouse_click=0,right_mouse_click=0;
 int keyboard_press=0;
 double mouse_pos_x, mouse_pos_y;
 double prev_mouse_pos_x,prev_mouse_pos_y;
 int flag_score=0;
+int level_game = 0;
 
 
 int checkreduction_life(int lives);
@@ -583,45 +598,46 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             user_score += 1;
         }
         break;
-    case GLFW_KEY_T:
-        camera_top=1;
-        camera_follow=0;
-        camera_fps=0;
-        camera_tower=0;
-        camera_self=0;
-        camera_helicopter=0;
-        break;
     case GLFW_KEY_R:
-        camera_top=0;
-        camera_follow=0;
+        top_cam=0;
+        follow_cube_cam=0;
         camera_fps=0;
-        camera_tower=1;
+        cam_tower=1;
         camera_self=0;
-        camera_helicopter=0;
+        camera_parachute=0;
         break;
-    case GLFW_KEY_F:
-        camera_top=0;
-        camera_follow=1;
+    case GLFW_KEY_T:
+        top_cam=1;
+        follow_cube_cam=0;
         camera_fps=0;
-        camera_tower=0;
+        cam_tower=0;
         camera_self=0;
-        camera_helicopter=0;
+        camera_parachute=0;
         break;
     case GLFW_KEY_P:
-        camera_top=0;
-        camera_follow=0;
+        top_cam=0;
+        follow_cube_cam=0;
         camera_fps=0;
-        camera_tower=0;
+        cam_tower=0;
         camera_self=0;
-        camera_helicopter=1;
+        camera_parachute=1;
         break;
+    case GLFW_KEY_F:
+        top_cam=0;
+        follow_cube_cam=1;
+        camera_fps=0;
+        cam_tower=0;
+        camera_self=0;
+        camera_parachute=0;
+        break;
+    
  case GLFW_KEY_I:
-    camera_top=0;
-    camera_follow=0;
+    top_cam=0;
+    follow_cube_cam=0;
     camera_fps=0;
-    camera_tower=0;
+    cam_tower=0;
     camera_self=1;
-    camera_helicopter=0;
+    camera_parachute=0;
     break;
 	default:
 	    break;
@@ -841,7 +857,7 @@ float camera_rotation_angle = 90;
 /* Render the scene with openGL */
 /* Edit this function according to your assignment */
 float angle;
-int rep=0,fl=0;
+int reputation=0,fl=0;
 glm::mat4 rotateTriangle2;
 glm::mat4 rotateTriangle1;
 
@@ -855,7 +871,7 @@ int checkreduction_life(int lives)
 
     if(cube["cube1"].x<-6 || cube["cube1"].x>12 || cube["cube2"].x<-6 || cube["cube2"].x>12 || cube["cube1"].z<-6 || cube["cube1"].z>12 || cube["cube2"].z<-6 || cube["cube2"].z>12)
     {
-        cout << "out of gameplay" << endl;
+
         lives -= 1;
         fl = 1;
     }
@@ -866,12 +882,25 @@ int checkreduction_life(int lives)
 
             for(j=0;j<10;j++)
             {
-                if(gamemap[i][j]==0)
+                if(level_game==0)
                 {
-                    if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
+                    if(gamemap[i][j]<=0)
                     {
-                        cout <<"on board" <<" " <<  i << " " << j << endl;
-                        lives -= 1;
+                        if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
+                        {
+                            lives -= 1;
+                        }
+                    }
+                }
+
+                else
+                {
+                    if(gamemap1[i][j]<=0)
+                    {
+                        if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
+                        {
+                            lives -= 1;
+                        }
                     }
                 }
             }
@@ -946,7 +975,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
         temp1= (cube["cube1"].x+cube["cube2"].x)/2;
         temp3 = (cube["cube1"].z+cube["cube2"].z)/2;
         temp2 = (cube["cube1"].y+cube["cube2"].y)/2;
-        if(camera_top==1)
+        if(top_cam==1)
         {
             eye_x_1 = 0+cos(45*M_PI/180);
             eye_z_1 = 0;
@@ -956,24 +985,17 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             target_y_1=0;
             target_z_1=0;
         }
-        if(camera_tower==1)
+       
+        if(follow_cube_cam==1)
         {
-            eye_x_1 = 15,
-            eye_y_1 = 15;
-            eye_z_1 = 0;
-            target_z_1 = 0;
-            target_y_1 = 0;
-            target_x_1 = 0;    
-        }
-        if(camera_follow==1)
-        {
-            
+
+                target_x_1 = temp1;            
                 eye_x_1 = temp1;
-                eye_y_1 = temp2;
                 eye_z_1 = temp3-5;
-                target_x_1 = temp1;
                 target_y_1 = temp2;
                 target_z_1 = 1000;
+                eye_y_1 = temp2;
+
         }
         if(camera_self==1)
         {
@@ -985,9 +1007,30 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             target_y_1 = temp2;
             target_z_1 = 1000;
         }
-        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
-        if(camera_helicopter==1)
+
+
+        if(cam_tower==1)
         {
+            eye_x_1 = 15,
+            eye_y_1 = 15;
+            eye_z_1 = 0;
+            target_z_1 = 0;
+            target_y_1 = 0;
+            target_x_1 = 0;    
+        }
+        glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
+        if(camera_parachute==1)
+        {
+
+            if(right_mouse_click==1)
+            {
+                angle = 90-(mouse_pos_y)*90/600;
+                eye_y_1 = 20*sin(angle*M_PI/180);
+                target_x_1 = 0;
+                target_z_1 = 0;
+                target_y_1 = 0;
+            }
+
             if(mouse_click==1)
             {
                 angle=(mouse_pos_x)*360/600;
@@ -997,18 +1040,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 target_z_1 = 0;
                 target_y_1 = 0;
             }
-            if(right_mouse_click==1)
-            {
-                angle = 90-(mouse_pos_y)*90/600;
-                eye_y_1 = 20*sin(angle*M_PI/180);
-                target_x_1 = 0;
-                target_z_1 = 0;
-                target_y_1 = 0;
-            }
         }
         prev_mouse_pos_x = mouse_pos_x;
         prev_mouse_pos_y = mouse_pos_y;
-        if(camera_self==0 && camera_follow==0)
+        if(camera_self==0 && follow_cube_cam==0)
         {
             orient_forward=1;
             orient_right=0;
@@ -1060,20 +1095,21 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             }
             if(fl==1)
             {
-                if(cube["cube1"].x>cube["cube2"].x)
-                {
-                    //cube["cube2"].y=2.5;
-                    //cube["cube2"].x=cube["cube1"].x;
-                    cube["cube2"].x-=0.2;
-                    cube["cube1"].x-=0.4;
-                    cube["cube1"].y+=0.2;
-                }
-                else if(cube["cube1"].x<cube["cube2"].x)
+                if(cube["cube1"].x<cube["cube2"].x)
                 {
                     cube["cube2"].y+=0.2;
                     //cube["cube1"].x=cube["cube2"].x;
                     cube["cube1"].x-=0.2;
                     cube["cube2"].x-=0.4;
+                    //cube["cube2"].y=2.5;
+                    //cube["cube2"].x=cube["cube1"].x;
+                    
+                }
+                else if(cube["cube1"].x>cube["cube2"].x)
+                {
+                    cube["cube2"].x-=0.2;
+                    cube["cube1"].x-=0.4;
+                    cube["cube1"].y+=0.2;
                 }
                 else
                 {
@@ -1084,19 +1120,20 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             }
             else
             {
-                if(cube["cube1"].y>cube["cube2"].y)
-                {
-                    cube["cube1"].x-=0.4;
-                    cube["cube2"].x-=0.2;
-                    cube["cube1"].y-=0.2;
-                    //cube["cube1"].y=cube["cube2"].y;
-
-                }
-                else
+                if(cube["cube1"].y<=cube["cube2"].y)
                 {
                     cube["cube2"].x-=0.4;
                     cube["cube1"].x-=0.2;
                     cube["cube2"].y-=0.2;
+
+                }
+                else
+                {
+                   
+                    cube["cube1"].x-=0.4;
+                    cube["cube2"].x-=0.2;
+                    cube["cube1"].y-=0.2;
+                    //cube["cube1"].y=cube["cube2"].y;
                     //cube["cube2"].y=cube["cube1"].y;
                 }
             }
@@ -1104,10 +1141,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             cube["cube2"].angle_z+=9;
             rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
             //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-            rep++;
-            if(rep==10)
+            reputation++;
+            if(reputation==10)
             {
-                rep=0;
+                reputation=0;
                 up1=0;
                 if(fl==0)
                 {
@@ -1182,10 +1219,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             cube["cube2"].angle_z-=9;
             rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(0,0,1));
             //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-            rep++;
-            if(rep==10)
+            reputation++;
+            if(reputation==10)
             {
-                rep=0;
+                reputation=0;
                 down1=0;
                 if(fl==0)
                 {
@@ -1256,10 +1293,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             cube["cube2"].angle_x-=9;
             rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
             //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
-            rep++;
-            if(rep==10)
+            reputation++;
+            if(reputation==10)
             {
-                rep=0;
+                reputation=0;
                 right1=0;
                 if(fl==0)
                 {
@@ -1335,10 +1372,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
             cube["cube2"].angle_x+=9;
             rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
             //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
-            rep++;
-            if(rep==10)
+            reputation++;
+            if(reputation==10)
             {
-                rep=0;
+                reputation=0;
                 left1=0;
                 if(fl==0)
                 {
@@ -1363,23 +1400,48 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
             for(j=0;j<10;j++)
             {
-                if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
-                {
-        
-
-                    string c="tile";
-                    char d=k_tile+'0';
-                    string e=c+d;
-                    int ones = gamemap[i][j]%10;
-                    int temp_num = gamemap[i][j]/10;
-                    int tens = temp_num%10;
-                    if(gamemap[tens][ones]==0)
+                if(level_game==0)
+                {    
+                    if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
                     {
-                        createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
-                        gamemap[tens][ones] = 1;
-                        k_tile++;
+            
+
+                        string c="tile";
+                        char d=k_tile+'0';
+                        string e=c+d;
+                        int ones = gamemap[i][j]%10;
+                        int temp_num = gamemap[i][j]/10;
+                        int tens = temp_num%10;
+                        if(gamemap[tens][ones]==0)
+                        {
+                            createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
+                            gamemap[tens][ones] = 1;
+                            k_tile++;
+                        }
                     }
                 }
+
+                if(level_game==1)
+                {
+                    if(gamemap[i][j]>2 && cube["cube1"].x==cube["cube2"].x && cube["cube1"].x>2*(i-3)-1 && cube["cube1"].x<2*(i-3)+1 && cube["cube1"].z>2*(j-3)-1 && cube["cube1"].z<2*(j-3)+1)
+                    {
+            
+
+                        string c="tile";
+                        char d=k_tile+'0';
+                        string e=c+d;
+                        int ones = gamemap[i][j]%10;
+                        int temp_num = gamemap[i][j]/10;
+                        int tens = temp_num%10;
+                        if(gamemap[tens][ones]==0)
+                        {
+                            createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
+                            gamemap[tens][ones] = 1;
+                            k_tile++;
+                        }
+                    }
+                }
+
             }
         }
 
@@ -1752,51 +1814,106 @@ void initGL (GLFWwindow* window, int width, int height)
 	int k=0,i,j;
     //createtile("background",0,skyblue2,skyblue1,skyblue1,skyblue4,0,0,0,1000,1000,1000,"background",0,0,0);
     //createtile("background1",0,skyblue2,skyblue1,skyblue,skyblue4,300,0,0,height,0,width,"background",0,0,0);
-    for(i=0;i<10;i++)
-    {
-
-        for(j=0;j<10;j++)
-        {
-            if(gamemap[i][j]==1)
-            {
     
 
-                string c="tile";
-                char d=k_tile+'0';
-                string e=c+d;
-                if((i+j)%2==0)
-                { 
-                    createtile(e,0,grey,sandybrown,grey,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
-                }
-                else
+    if(level_game==0)
+    {
+        for(i=0;i<10;i++)
+        {
+
+            for(j=0;j<10;j++)
+            {
+                if(gamemap[i][j]==1)
                 {
-                    createtile(e,0,grey,brown2,dimgrey,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+        
+
+                    string c="tile";
+                    char d=k_tile+'0';
+                    string e=c+d;
+                    if((i+j)%2==0)
+                    { 
+                        createtile(e,0,grey,sandybrown,grey,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                    }
+                    else
+                    {
+                        createtile(e,0,grey,brown2,dimgrey,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                    }
+                    k_tile++;
                 }
-                k_tile++;
+
+                else if(gamemap[i][j]<0)
+                {
+                    string c="tile";
+                    char d=k_tile+'0';
+                    string e=c+d; 
+                    createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                    k_tile++;
+                }
+
+                else if(gamemap[i][j]>2)
+                {
+                    string c="tile";
+                    char d=k_tile+'0';
+                    string e=c+d;
+
+                    createtile(e,0,plum,darkpink,plum,darkpink,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+
+                    k_tile++;
+                }
+
             }
-
-            else if(gamemap[i][j]<0)
-            {
-                string c="tile";
-                char d=k_tile+'0';
-                string e=c+d; 
-                createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
-                k_tile++;
-            }
-
-            else if(gamemap[i][j]>2)
-            {
-                string c="tile";
-                char d=k_tile+'0';
-                string e=c+d;
-
-                createtile(e,0,plum,darkpink,plum,darkpink,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
-
-                k_tile++;
-            }
-
         }
     }
+
+    if(level_game==1)
+    {
+     for(i=0;i<10;i++)
+     {
+
+         for(j=0;j<10;j++)
+         {
+             if(gamemap[i][j]==1)
+             {
+     
+
+                 string c="tile";
+                 char d=k_tile+'0';
+                 string e=c+d;
+                 if((i+j)%2==0)
+                 { 
+                     createtile(e,0,grey,sandybrown,grey,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                 }
+                 else
+                 {
+                     createtile(e,0,grey,brown2,dimgrey,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                 }
+                 k_tile++;
+             }
+
+             else if(gamemap[i][j]<0)
+             {
+                 string c="tile";
+                 char d=k_tile+'0';
+                 string e=c+d; 
+                 createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                 k_tile++;
+             }
+
+             else if(gamemap[i][j]>2)
+             {
+                 string c="tile";
+                 char d=k_tile+'0';
+                 string e=c+d;
+
+                 createtile(e,0,plum,darkpink,plum,darkpink,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+
+                 k_tile++;
+             }
+
+         }
+     }   
+    }
+
     createtile("cube1",0,salmon,salmon,red,salmon,12,0.25,-4,2,2,2,"cube",0,0,0);
     createtile("cube2",0,salmon,salmon,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
 
