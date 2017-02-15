@@ -37,7 +37,7 @@ typedef struct COLOR COLOR;
     COLOR grey = {165.0/255.0,165.0/255.0,165.0/255.0};
     COLOR dimgrey = {105.0/255.0,105.0/255.0,105.0/255.0};
     COLOR gold = {218.0/255.0,165.0/255.0,32.0/255.0};
-    COLOR coingold = {255.0/255.0,223.0/255.0,0.0/255.0};
+    COLOR orange = {255/255.0, 165/255.0, 0/255.0};
     COLOR red = {255.0/255.0,51.0/255.0,51.0/255.0};
     COLOR lightgreen = {57/255.0,230/255.0,0/255.0};
     COLOR darkgreen = {51/255.0,102/255.0,0/255.0};
@@ -48,7 +48,7 @@ typedef struct COLOR COLOR;
     COLOR brown1 = {117/255.0,78/255.0,40/255.0};
     COLOR brown2 = {134/255.0,89/255.0,40/255.0};
     COLOR brown3 = {46/255.0,46/255.0,31/255.0};
-    COLOR cratebrown = {153/255.0,102/255.0,0/255.0};
+    COLOR salmon = {250/255.0, 128/255.0, 114/255.0};
     COLOR cratebrown1 = {121/255.0,85/255.0,0/255.0};
     COLOR cratebrown2 = {102/255.0,68/255.0,0/255.0};
     COLOR slateblue = {106/255.0, 90/255.0, 205/255.0};
@@ -66,6 +66,10 @@ typedef struct COLOR COLOR;
     COLOR indianred = {205/255.0, 92/255.0, 92/255.0};
     COLOR peach = {255/255.0, 218/255.0, 185/255.0};
     COLOR wheat = {244/255.0, 164/255.0, 96/255.0};
+    COLOR burlywood = {222/255.0, 184/255.0, 135/255.0};
+    COLOR sandybrown = {244/255.0, 164/255.0, 96/255.0};
+    COLOR plum = {221/255.0, 160/255.0, 221/255.0};
+
 
 struct Game {
     string name;
@@ -80,18 +84,45 @@ struct Game {
     float numx;
     float numy;
 };
+
+
+struct Sprite {
+    string name;
+    COLOR color;
+    int color_code;
+    float x,y;
+    VAO* object;
+    int status;
+    float height,width;
+    float x_speed,y_speed;
+    float angle; //Current Angle (Actual rotated angle of the object)
+    int inAir;
+    float radius;
+    int fixed;
+    float friction; //Value from 0 to 1
+    int health;
+    int isRotating;
+    int direction; //0 for clockwise and 1 for anticlockwise for animation
+    float remAngle; //the remaining angle to finish animation
+    int isMovingAnim;
+    int dx;
+    int dy;
+    float weight;
+};
+typedef struct Sprite Sprite;
+
 map <string, Game> tiles;
 map <string, Game> background;
 map <string, Game> cube;
-map <string, Game> scoredisp;
-map <string, Game> life;
+map <string, Sprite> scoredisp;
+map <string, Sprite> life;
 map <string, Game> welcomeback;
 
 int gamemap[10][10]={
     {1,1,1,1,25,0,1,1,0,0},
-    {0,0,0,0,0,1,1,1,0,0},
-    {0,0,0,1,1,0,0,0,0,0},
-    {0,0,0,1,13,0,0,0,0,0},
+    {0,0,-1,0,-1,1,1,1,0,0},
+    {0,0,1,1,1,0,0,0,0,0},
+    {0,0,1,1,13,0,0,0,0,0},
     {0,0,0,1,1,0,0,0,0,0},
     {0,0,0,1,1,0,0,0,0,0},      // 0 means gap , 1 means normal tile , 2 means bridge , 3 mean lever
     {0,0,0,1,1,1,1,0,0,0},
@@ -367,10 +398,69 @@ void setStrokes(char val){
     }
 }
 
-
-/*void createcircle (string name, float angle, COLOR color,float x, float y,float z, float height, float width,float depth, string component,int status,float numx,float numy)
+void createRectangle (string name, float weight, COLOR colorA, COLOR colorB, COLOR colorC, COLOR colorD, float x, float y, float height, float width, string component)
 {
-    int parts = 1000;
+    // GL3 accepts only Triangles. Quads are not supported
+    float w=width/2,h=height/2;
+    GLfloat vertex_buffer_data [] = {
+        -w,-h,0, // vertex 1
+        -w,h,0, // vertex 2
+        w,h,0, // vertex 3
+
+        w,h,0, // vertex 3
+        w,-h,0, // vertex 4
+        -w,-h,0  // vertex 1
+    };
+
+    GLfloat color_buffer_data [] = {
+        colorA.r,colorA.g,colorA.b, // color 1
+        colorB.r,colorB.g,colorB.b, // color 2
+        colorC.r,colorC.g,colorC.b, // color 3
+
+        colorC.r,colorC.g,colorC.b, // color 4
+        colorD.r,colorD.g,colorD.b, // color 5
+        colorA.r,colorA.g,colorA.b // color 6
+    };
+
+    // create3DObject creates and returns a handle to a VAO that can be used later
+    VAO *rectangle = create3DObject(GL_TRIANGLES, 6, vertex_buffer_data, color_buffer_data, GL_FILL);
+    Sprite sprity = {};
+    sprity.color = colorA;
+    sprity.name = name;
+    sprity.object = rectangle;
+    sprity.x=x;
+    sprity.y=y;
+    sprity.height=height;
+    sprity.width=width;
+    sprity.status=1;
+    sprity.inAir=0;
+    sprity.color_code = 0;
+    sprity.x_speed=0;
+    sprity.y_speed=0;
+    sprity.fixed=0;
+    sprity.radius=(sqrt(height*height+width*width))/2;
+    sprity.friction=0.4;
+    sprity.health=100;
+    sprity.weight=weight;
+
+    if(component=="score")
+    {        
+        scoredisp[name] = sprity;
+        if(name=="diagonal")
+        {
+            scoredisp[name].angle = M_PI/4;
+        }
+
+    }
+
+
+
+}
+
+
+void createCircle (string name, float weight, COLOR color, float x, float y, float rx, float ry, int NoOfParts, string component, int fill)
+{
+    int parts = NoOfParts;
     GLfloat vertex_buffer_data[parts*9];
     GLfloat color_buffer_data[parts*9];
     int i,j;
@@ -398,27 +488,28 @@ void setStrokes(char val){
         circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_FILL);
     else
         circle = create3DObject(GL_TRIANGLES, (parts*9)/3, vertex_buffer_data, color_buffer_data, GL_LINE);
-    
-    Game InstanceGame = {};
-    InstanceGame.color = color;
-    InstanceGame.name = name;
-    InstanceGame.object = circle;
-    InstanceGame.x=x;
-    InstanceGame.y=y;
-    InstanceGame.z=z;
-    InstanceGame.height=2*height;
-    InstanceGame.width=2*width;
-    InstanceGame.depth=depth;
-    InstanceGame.radius=height;
-    InstanceGame.angle_x=angle;
-    InstanceGame.status=status;
-    InstanceGame.numx=numx;
-    InstanceGame.numy=numy;
-
+    Sprite sprity = {};
+    sprity.color = color;
+    sprity.name = name;
+    sprity.object = circle;
+    sprity.x=x;
+    sprity.y=y;
+    sprity.height=2*ry; //Height of the sprite is 2*r
+    sprity.width=2*rx; //Width of the sprite is 2*r
+    sprity.status=1;
+    sprity.inAir=0;
+    sprity.x_speed=0;
+    sprity.y_speed=0;
+    sprity.radius=rx;
+    sprity.fixed=0;
+    sprity.friction=0.4;
+    sprity.health=100;
+    sprity.weight=weight;
     if(component=="life")
-        life[name]=InstanceGame;
+        life[name]=sprity;
     
-}*/
+}
+
 
 /* Executed when a regular key is pressed/released/held-down */
 /* Prefered for Keyboard events */
@@ -554,42 +645,7 @@ void keyboardChar (GLFWwindow* window, unsigned int key)
     case 'q':
 	quit(window);
 	break;
-    case 'a':
-	   if(camera_follow==1 || camera_self==1)
-       {
-            orient_left=1;
-            orient_right=0;
-            orient_backward=0;
-            orient_forward=0;
-       }
-	break;
-    case 'd':
-    	if(camera_follow==1 ||  camera_self==1)
-           {
-                orient_left=0;
-                orient_right=1;
-                orient_backward=0;
-                orient_forward=0;
-           }
-	break;
-    case 'w':
-	   if(camera_follow==1 ||camera_self==1)
-       {
-            orient_left=0;
-            orient_right=0;
-            orient_backward=0;
-            orient_forward=1;
-       }
-	break;
-    case 's':
-        if(camera_follow==1 || camera_self==1)
-       {
-            orient_left=0;
-            orient_right=0;
-            orient_backward=1;
-            orient_forward=0;
-       }
-	break;
+    
     case ' ':
 	do_rot ^= 1;
 	break;
@@ -709,7 +765,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color4.r,color4.g,color4.b, // color 1
         color4.r,color4.g,color4.b, // color 2
         color4.r,color4.g,color4.b, // color 3
-
         color4.r,color4.g,color4.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color4.r,color4.g,color4.b, // color 6
@@ -717,7 +772,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color4.r,color4.g,color4.b, // color 1
         color4.r,color4.g,color4.b, // color 2
         color4.r,color4.g,color4.b, // color 3
-
         color4.r,color4.g,color4.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color4.r,color4.g,color4.b, // color 6
@@ -725,7 +779,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color4.r,color4.g,color4.b, // color 1
         color4.r,color4.g,color4.b, // color 2
         color4.r,color4.g,color4.b, // color 3
-
         color4.r,color4.g,color4.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color4.r,color4.g,color4.b, // color 6
@@ -733,7 +786,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color4.r,color4.g,color4.b, // color 1
         color4.r,color4.g,color4.b, // color 2
         color4.r,color4.g,color4.b, // color 3
-
         color4.r,color4.g,color4.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color4.r,color4.g,color4.b, // color 6
@@ -741,7 +793,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color.r,color.g,color.b, // color 1
         color2.r,color2.g,color2.b, // color 2
         color3.r,color3.g,color3.b, // color 3
-
         color3.r,color3.g,color3.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color.r,color.g,color.b, // color 6
@@ -749,7 +800,6 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
         color.r,color.g,color.b, // color 1
         color2.r,color2.g,color2.b, // color 2
         color3.r,color3.g,color3.b, // color 3
-
         color3.r,color3.g,color3.b, // color 4
         color4.r,color4.g,color4.b, // color 5
         color.r,color.g,color.b, // color 6
@@ -781,15 +831,7 @@ void createtile (string name, float angle, COLOR color,COLOR color2,COLOR color3
     {
         cube[name]=InstanceGame;
     }
-    if(component=="score")
-    {        
-        scoredisp[name] = InstanceGame;
-        if(name=="diagonal")
-        {
-            scoredisp[name].angle_x = M_PI/4;
-        }
-
-    }
+   
     
 }
 
@@ -875,6 +917,10 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
     COLOR indianred = {205/255.0, 92/255.0, 92/255.0};
     COLOR peach = {255/255.0, 218/255.0, 185/255.0};
     COLOR wheat = {244/255.0, 164/255.0, 96/255.0};
+    COLOR burlywood = {222/255.0, 184/255.0, 135/255.0};
+    COLOR sandybrown = {244/255.0, 164/255.0, 96/255.0};
+
+
 
     int fbwidth, fbheight;
     glfwGetFramebufferSize(window, &fbwidth, &fbheight);
@@ -919,81 +965,23 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
     }
     if(camera_follow==1)
     {
-        if(orient_left==1)
-        {
-            eye_x_1 = temp1-5;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3;
-            target_x_1 = 1000;
-            target_y_1 = temp2;
-            target_z_1 = temp3;
-        }
-        else if(orient_right==1)
-        {
-            eye_x_1 = temp1+5;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3;
-            target_x_1 = -1000;
-            target_y_1 = temp2;
-            target_z_1 = temp3;
-        }
-        else if(orient_backward==1)
-        {
-            eye_x_1 = temp1;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3+5;
-            target_x_1 = temp1;
-            target_y_1 = temp2;
-            target_z_1 = -1000;
-        }
-        else
-        {
+        
             eye_x_1 = temp1;
             eye_y_1 = temp2;
             eye_z_1 = temp3-5;
             target_x_1 = temp1;
             target_y_1 = temp2;
             target_z_1 = 1000;
-        }
     }
     if(camera_self==1)
     {
-        if(orient_left==1)
-        {
-            eye_x_1 = temp1-3;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3;
-            target_x_1 = -1000;
-            target_y_1 = temp2;
-            target_z_1 = temp3;
-        }
-        else if(orient_right==1)
-        {
-            eye_x_1 = temp1+3;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3;
-            target_x_1 = 1000;
-            target_y_1 = temp2;
-            target_z_1 = temp3;
-        }
-        else if(orient_backward==1)
-        {
-            eye_x_1 = temp1;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3-3;
-            target_x_1 = temp1;
-            target_y_1 = temp2;
-            target_z_1 = -1000;
-        }
-        else
-        {
-            eye_x_1 = temp1;
-            eye_y_1 = temp2;
-            eye_z_1 = temp3+3;
-            target_x_1 = temp1;
-            target_y_1 = temp2;
-            target_z_1 = 1000;
-        }
+        
+        eye_x_1 = temp1;
+        eye_y_1 = temp2;
+        eye_z_1 = temp3+3;
+        target_x_1 = temp1;
+        target_y_1 = temp2;
+        target_z_1 = 1000;
     }
     glfwGetCursorPos(window, &mouse_pos_x, &mouse_pos_y);
     if(camera_helicopter==1)
@@ -1061,181 +1049,6 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
 
 
-
-
-    string scored = "score";
-        int ps_score = user_score;
-        int ones = ps_score%10;
-        ps_score = ps_score/10;
-        int tenth = ps_score%10;
-        ps_score = ps_score/10;
-        int hundreth = ps_score%10;
-        int k_s;
-        for(k_s=0;k_s<=11;k_s++)
-        {
-            if(k_s==0)
-            {
-                char inp = ones + '0';
-                setStrokes(inp);
-            }
-
-            if(k_s==1)
-            {
-                char inp = tenth + '0';
-                setStrokes(inp);
-            }
-
-            if(k_s==2)
-            {
-                char inp = hundreth + '0';
-                setStrokes(inp);
-            }
-
-            if(k_s==3)
-            {
-                char inp = 'S';
-                setStrokes(inp);
-            }
-
-            if(k_s==4)
-            {
-                char inp = 'C';
-                setStrokes(inp);
-            }
-
-            if(k_s==5)
-            {
-                char inp = 'O';
-                setStrokes(inp);
-            }
-
-            if(k_s==6)
-            {
-                char inp = 'R';
-                setStrokes(inp);
-            }
-            if(k_s==7)
-            {
-                char inp = 'E';
-                setStrokes(inp);
-            }
-            if(k_s==8)
-            {
-                char inp = 'L';
-                setStrokes(inp);
-            }
-
-            if(k_s==9)
-            {
-                char inp = 'I';
-                setStrokes(inp);
-            }
-            if(k_s==10)
-            {
-                char inp = 'F';
-                setStrokes(inp);
-            }
-
-            if(k_s==11)
-            {
-                char inp = 'E';
-                setStrokes(inp);
-            }
-
-          
-
-
-            for(map<string,Game>::iterator it=scoredisp.begin();it!=scoredisp.end();it++)
-            {
-                string current = it->first; //The name of the current object
-                if(scoredisp[current].status==0)
-                {
-                    continue;
-                }
-
-                glm::mat4 MVP;  // MVP = Projection * View * Model
-
-                Matrices.model = glm::mat4(1.0f);
-
-                glm::mat4 ObjectTransform;
-                
-                if(k_s==0)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                
-                }
-                if(k_s==1)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-36-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-
-                if(k_s==2)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-72-15, scoredisp[current].y-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==3)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-130, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==4)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-90, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==5)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-50, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==6)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-10, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    glm::mat4 rotateObjectAct = glm::rotate((float)(scoredisp[current].angle_x), glm::vec3(0,0,1));  // rotate about vector (1,0,0)
-                    ObjectTransform=translateObject*rotateObjectAct;
-                    
-                }
-                if(k_s==7)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+30, scoredisp[current].y+70-150, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==8)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-100, scoredisp[current].y+200, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-
-                if(k_s==9)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-60, scoredisp[current].y+200, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-
-                if(k_s==10)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x-20, scoredisp[current].y+200, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-                if(k_s==11)
-                {
-                    glm::mat4 translateObject = glm::translate (glm::vec3(scoredisp[current].x+20, scoredisp[current].y+200, 0.0f)); // glTranslatef
-                    ObjectTransform=translateObject;
-                }
-
-
-                Matrices.model *= ObjectTransform;
-                MVP = VP * Matrices.model; // MVP = p * V * M
-                
-                glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-                draw3DObject(scoredisp[current].object);
-                //glPopMatrix (); 
-            }
-        }
 
     if(up1==1)
     {
@@ -1560,7 +1373,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 int tens = temp_num%10;
                 if(gamemap[tens][ones]==0)
                 {
-                    createtile(e,0,gold,gold,gold,gold,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
+                    createtile(e,0,gold,orange,red,darkpink,2*(tens-3),-2,2*(ones-3),1,2,2,"tile",0,i,j);
                     gamemap[tens][ones] = 1;
                     k_tile++;
                 }
@@ -1686,12 +1499,21 @@ void initGL (GLFWwindow* window, int width, int height)
                 string e=c+d;
                 if((i+j)%2==0)
                 { 
-                    createtile(e,0,brown1,brown1,brown1,brown1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                    createtile(e,0,grey,sandybrown,grey,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 }
                 else
                 {
-                    createtile(e,0,brown2,brown2,brown2,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                    createtile(e,0,grey,brown2,dimgrey,brown2,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 }
+                k_tile++;
+            }
+
+            else if(gamemap[i][j]<0)
+            {
+                string c="tile";
+                char d=k_tile+'0';
+                string e=c+d; 
+                createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                 k_tile++;
             }
 
@@ -1701,31 +1523,17 @@ void initGL (GLFWwindow* window, int width, int height)
                 char d=k_tile+'0';
                 string e=c+d;
 
-                createtile(e,0,blue,blue,blue,blue,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                createtile(e,0,plum,darkpink,plum,darkpink,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
 
                 k_tile++;
             }
 
         }
     }
-    createtile("cube1",0,red,red,red,red,12,0.25,-4,2,2,2,"cube",0,0,0);
-    createtile("cube2",0,red,red,red,red,12,2.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube1",0,salmon,salmon,red,salmon,12,0.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube2",0,salmon,salmon,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
 
 
-    createtile("top",0,chocolate,chocolate,chocolate,chocolate,0+550,24,0,8,24,0,"score",0,0,0);
-    createtile("bottom",0,chocolate,chocolate,chocolate,chocolate,0+550,-24,0,8,24,0,"score",0,0,0);
-    createtile("middle",0,chocolate,chocolate,chocolate,chocolate,0+550,0,0,8,24,0,"score",0,0,0);
-    createtile("left1",0,chocolate,chocolate,chocolate,chocolate,-24/2+550,24/2,0,24,8,0,"score",0,0,0);
-    createtile("left2",0,chocolate,chocolate,chocolate,chocolate,-24/2+550,-24/2,0,24,8,0,"score",0,0,0);
-    createtile("right1",0,chocolate,chocolate,chocolate,chocolate,24/2+550,24/2,0,24,8,0,"score",0,0,0);
-    createtile("right2",0,chocolate,chocolate,chocolate,chocolate,24/2+550,-24/2,0,24,8,0,"score",0,0,0);
-    createtile("middle1",0,chocolate,chocolate,chocolate,chocolate,0+550,24/2,0,24,8,0,"score",0,0,0);
-    createtile("middle2",0,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,0,24,8,0,"score",0,0,0);
-    createtile("diagonal",0,chocolate,chocolate,chocolate,chocolate,0+550,-24/2,0,24*sqrt(2),8,0,"score",0,0,0);
-    
-    /*createCircle("1",10000,indianred,450+8,132,20,20,1000,"life",1);
-    createCircle("2",10000,indianred,500+8,132,20,20,1000,"life",1);
-    createCircle("3",10000,indianred,550+8,132,20,20,1000,"life",1);*/
 
 
 
