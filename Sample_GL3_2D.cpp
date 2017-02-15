@@ -120,6 +120,7 @@ int up1=0,down1=0,right1=0,left1=0;
 int user_score = 0;
 int user_life = 3;
 int k_tile=0;
+int game_over=0;
 
 float eye_x_1,eye_y_1,eye_z_1;
 float target_x_1,target_y_1,target_z_1;
@@ -142,6 +143,10 @@ int mouse_click=0,right_mouse_click=0;
 int keyboard_press=0;
 double mouse_pos_x, mouse_pos_y;
 double prev_mouse_pos_x,prev_mouse_pos_y;
+
+
+int checkreduction_life(int lives);
+
 
 
 
@@ -451,6 +456,7 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             right1=0;
             left1=0;
             user_score += 1;
+            
         }
         break;
     case GLFW_KEY_DOWN:
@@ -483,7 +489,6 @@ void keyboard (GLFWwindow* window, int key, int scancode, int action, int mods)
             up1=0;
             down1=0;
             user_score += 1;
-
         }
         break;
     case GLFW_KEY_T:
@@ -796,6 +801,44 @@ float angle;
 int rep=0,fl=0;
 glm::mat4 rotateTriangle2;
 glm::mat4 rotateTriangle1;
+
+
+
+int checkreduction_life(int lives)
+{
+    int i,j;
+    int fl = 0;
+    cout << "lives_initial" << "->" << lives << endl;
+
+    if(cube["cube1"].x<-6 || cube["cube1"].x>12 || cube["cube2"].x<-6 || cube["cube2"].x>12 || cube["cube1"].z<-6 || cube["cube1"].z>12 || cube["cube2"].z<-6 || cube["cube2"].z>12)
+    {
+        cout << "out of gameplay" << endl;
+        lives -= 1;
+        fl = 1;
+    }
+    if(fl==0)
+    {
+        for(i=0;i<10;i++)
+        {
+
+            for(j=0;j<10;j++)
+            {
+                if(gamemap[i][j]==0)
+                {
+                    if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
+                    {
+                        cout <<"on board" <<" " <<  i << " " << j << endl;
+                        lives -= 1;
+                    }
+                }
+            }
+        }
+    }
+return lives;
+}
+
+
+
 void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, int doP)
 {
 
@@ -1008,6 +1051,18 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
 
     // Load identity to model matrix
     Matrices.model = glm::mat4(1.0f);
+
+
+
+    if(game_over==1)
+    {
+        quit(window);
+    }
+
+
+
+
+
     string scored = "score";
         int ps_score = user_score;
         int ones = ps_score%10;
@@ -1248,6 +1303,14 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 cube["cube1"].x=cube["cube2"].x;
             }
             fl=0;
+
+            user_life = checkreduction_life(user_life);
+
+            cout << user_life << endl;
+            if(user_life==0)
+            {
+                game_over = 1;
+            }
         }
     }
 
@@ -1318,6 +1381,13 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 cube["cube1"].x=cube["cube2"].x;
             }
             fl=0;
+            user_life = checkreduction_life(user_life);
+
+            cout << user_life << endl;
+            if(user_life==0)
+            {
+                game_over = 1;
+            }
         }
     }
     
@@ -1385,6 +1455,14 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 cube["cube1"].z=cube["cube2"].z;
             }
             fl=0;
+
+            user_life = checkreduction_life(user_life);
+
+            cout << user_life << endl;
+            if(user_life==0)
+            {
+                game_over = 1;
+            }
         }
     }
 
@@ -1456,75 +1534,12 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
                 cube["cube1"].z=cube["cube2"].z;
             }
             fl=0;
+
+            
+
         }
     }
-    if(right1==1)
-    {
-        if(cube["cube1"].y==cube["cube2"].y)
-        {
-            fl=1;
-        }
-        if(fl==1)
-        {
-            if(cube["cube1"].z>cube["cube2"].z)
-            {
-                cube["cube1"].z-=0.4;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].y+=0.2;
-            }
-            else if(cube["cube1"].z<cube["cube2"].z)
-            {
-                cube["cube2"].y+=0.2;
-                //cube["cube1"].x=cube["cube2"].x;
-                cube["cube2"].z-=0.4;
-                cube["cube1"].z-=0.2;
-            }
-            else
-            {
-                cube["cube1"].z-=0.2;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].z=cube["cube2"].z;
-            }
-        }
-        else
-        {
-            if(cube["cube1"].y>cube["cube2"].y)
-            {
-                cube["cube1"].z-=0.4;
-                cube["cube2"].z-=0.2;
-                cube["cube1"].y-=0.2;
-                //cube["cube1"].y=cube["cube2"].y;
-
-            }
-            else
-            {
-                cube["cube2"].z-=0.4;
-                cube["cube1"].z-=0.2;
-                cube["cube2"].y-=0.2;
-                //cube["cube2"].y=cube["cube1"].y;
-            }
-        }
-        cube["cube1"].angle_x-=9;
-        cube["cube2"].angle_x-=9;
-        rotateTriangle1 = glm::rotate((float)(((cube["cube1"].angle_x))*M_PI/180.0f), glm::vec3(1,0,0));
-        //rotateTriangle2 = glm::rotate((float)(((cube["cube1"].angle_z))*M_PI/180.0f), glm::vec3(1,0,0));
-        rep++;
-        if(rep==10)
-        {
-            rep=0;
-            right1=0;
-            if(fl==0)
-            {
-                cube["cube1"].y=cube["cube2"].y;
-            }
-            if(fl==1)
-            {
-                cube["cube1"].z=cube["cube2"].z;
-            }
-            fl=0;
-        }
-    }
-
+    
 
     int k=0,i,j;
 
@@ -1553,6 +1568,26 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
         }
     }
 
+
+    for(map<string,Game>::iterator it=cube.begin();it!=cube.end();it++){
+            string current = it->first; //The name of the current object
+            glm::mat4 MVP;  // MVP = Projection * View * Model
+            Matrices.model = glm::mat4(1.0f);
+            glm::mat4 ObjectTransform;
+            glm::mat4 translateObject = glm::translate (glm::vec3(cube[current].x,cube[current].y, cube[current].z));
+            ObjectTransform=translateObject*rotateTriangle1;
+            Matrices.model *= ObjectTransform;
+            //MVP = VP * Matrices.model; // MVP = p * V * M
+            if(doM)
+                MVP = VP * Matrices.model;
+            else
+                MVP = VP;
+            glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+
+            draw3DObject(cube[current].object);
+        }
+
+
     for(map<string,Game>::iterator it=tiles.begin();it!=tiles.end();it++){
         string current = it->first; //The name of the current object
         glm::mat4 MVP;  // MVP = Projection * View * Model
@@ -1574,23 +1609,7 @@ void draw (GLFWwindow* window,float x,float y,float w,float h,int doM, int doV, 
         draw3DObject(tiles[current].object);
         //glPopMatrix (); 
     }
-    for(map<string,Game>::iterator it=cube.begin();it!=cube.end();it++){
-        string current = it->first; //The name of the current object
-        glm::mat4 MVP;  // MVP = Projection * View * Model
-        Matrices.model = glm::mat4(1.0f);
-        glm::mat4 ObjectTransform;
-        glm::mat4 translateObject = glm::translate (glm::vec3(cube[current].x,cube[current].y, cube[current].z));
-        ObjectTransform=translateObject*rotateTriangle1;
-        Matrices.model *= ObjectTransform;
-        //MVP = VP * Matrices.model; // MVP = p * V * M
-        if(doM)
-            MVP = VP * Matrices.model;
-        else
-            MVP = VP;
-        glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-
-        draw3DObject(cube[current].object);
-    }
+    
     /*Matrices.model = glm::translate(floor_pos);
     MVP = VP * Matrices.model;
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
