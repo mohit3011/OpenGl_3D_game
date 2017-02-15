@@ -119,7 +119,7 @@ map <string, Sprite> life;
 map <string, Game> welcomeback;
 
 int gamemap[10][10]={
-    {1,1,1,1,25,0,1,1,0,0},
+    {1,1,1,1,25,0,1,-10,0,0},
     {0,0,-1,0,-1,1,1,1,0,0},
     {0,0,1,1,1,0,0,0,0,0},
     {0,0,1,1,13,0,0,0,0,0},
@@ -884,7 +884,7 @@ int checkreduction_life(int lives)
             {
                 if(level_game==0)
                 {
-                    if(gamemap[i][j]<=0)
+                    if(gamemap[i][j]<=0 && gamemap[i][j]!=-10)
                     {
                         if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
                         {
@@ -895,7 +895,7 @@ int checkreduction_life(int lives)
 
                 else
                 {
-                    if(gamemap1[i][j]<=0)
+                    if(gamemap1[i][j]<=0 && gamemap1[i][j]!=-10)
                     {
                         if(((cube["cube1"].x<2*(i-3)+1 && cube["cube1"].x>2*(i-3)-1) && (cube["cube1"].z<2*(j-3)+1 && cube["cube1"].z>2*(j-3)-1)) || ((cube["cube2"].x<2*(i-3)+1 && cube["cube2"].x>2*(i-3)-1) && (cube["cube2"].z<2*(j-3)+1 && cube["cube2"].z>2*(j-3)-1)))
                         {
@@ -1841,7 +1841,7 @@ void initGL (GLFWwindow* window, int width, int height)
                     k_tile++;
                 }
 
-                else if(gamemap[i][j]<0)
+                else if(gamemap[i][j]<0 && gamemap[i][j]!=-10)
                 {
                     string c="tile";
                     char d=k_tile+'0';
@@ -1849,6 +1849,15 @@ void initGL (GLFWwindow* window, int width, int height)
                     createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                     k_tile++;
                 }
+
+                 else if(gamemap[i][j]==-10)
+                {
+                 string c="tile";
+                 char d=k_tile+'0';
+                 string e=c+d; 
+                 createtile(e,0,lightgreen,grey,grey,lightgreen,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                 k_tile++;
+                 }
 
                 else if(gamemap[i][j]>2)
                 {
@@ -1881,7 +1890,7 @@ void initGL (GLFWwindow* window, int width, int height)
                  string e=c+d;
                  if((i+j)%2==0)
                  { 
-                     createtile(e,0,grey,sandybrown,grey,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                     createtile(e,0,brown1,sandybrown,brown1,sandybrown,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                  }
                  else
                  {
@@ -1890,7 +1899,7 @@ void initGL (GLFWwindow* window, int width, int height)
                  k_tile++;
              }
 
-             else if(gamemap[i][j]<0)
+             else if(gamemap[i][j]<0 && gamemap[i][j]!=-10)
              {
                  string c="tile";
                  char d=k_tile+'0';
@@ -1898,6 +1907,15 @@ void initGL (GLFWwindow* window, int width, int height)
                  createtile(e,0,skyblue1,grey,grey,skyblue1,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
                  k_tile++;
              }
+
+             else if(gamemap[i][j]==-10)
+            {
+                 string c="tile";
+                 char d=k_tile+'0';
+                 string e=c+d; 
+                 createtile(e,0,lightgreen,grey,grey,lightgreen,2*(i-3),-2,2*(j-3),1,2,2,"tile",0,i,j);
+                 k_tile++;
+            }
 
              else if(gamemap[i][j]>2)
              {
@@ -1914,8 +1932,8 @@ void initGL (GLFWwindow* window, int width, int height)
      }   
     }
 
-    createtile("cube1",0,salmon,salmon,red,salmon,12,0.25,-4,2,2,2,"cube",0,0,0);
-    createtile("cube2",0,salmon,salmon,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube1",0,salmon,red,red,salmon,12,0.25,-4,2,2,2,"cube",0,0,0);
+    createtile("cube2",0,salmon,red,red,salmon,12,2.25,-4,2,2,2,"cube",0,0,0);
 
 
     createRectangle("top",10000,chocolate,chocolate,chocolate,chocolate,0,24/8,8/8,24/8,"score");
